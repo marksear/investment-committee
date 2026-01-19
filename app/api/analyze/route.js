@@ -8,13 +8,13 @@ export async function POST(request) {
   try {
     const { formData, marketPulse } = await request.json()
 
-    // Build the prompt
-    const prompt = buildPrompt(formData, marketPulse)
+    // Build the full Investment Committee prompt
+    const prompt = buildFullPrompt(formData, marketPulse)
 
-    // Call Claude API
+    // Call Claude API with extended token limit for comprehensive analysis
     const message = await client.messages.create({
       model: 'claude-sonnet-4-20250514',
-      max_tokens: 4096,
+      max_tokens: 16384,
       messages: [
         {
           role: 'user',
@@ -37,138 +37,398 @@ export async function POST(request) {
   }
 }
 
-function buildPrompt(formData, marketPulse) {
-  return `You are an AI Investment Committee applying the Five Pillars framework (Graham, Buffett, Munger, Marks, Lynch) to make disciplined investment decisions.
+function buildFullPrompt(formData, marketPulse) {
+  const hasPotentials = formData.potentialsText && formData.potentialsText.trim().length > 0
 
-## CONTEXT
+  return `# TheMoneyProgram — Investment Committee Analysis
+## UK Full Mode — Graham • Buffett • Munger • Howard Marks • Peter Lynch
 
-**Month:** ${formData.month}
-**New Contribution:** £${formData.contribution}
-**Account:** ${formData.wrapper} at ${formData.broker}
-**Time Horizon:** ${formData.timeHorizon} years
-**Core/Satellite Target:** ${formData.coreSatSplit}
-**Drawdown Trigger:** ${formData.drawdownTrigger}%
-**User Sentiment:** ${formData.marketSentiment}/10 (${formData.marketSentiment <= 4 ? 'Cautious' : formData.marketSentiment <= 6 ? 'Balanced' : 'Aggressive'})
-**US Assets Permitted:** ${formData.usPermitted ? 'Yes' : 'No'}
-**Bitcoin Permitted:** ${formData.btcPermitted ? 'Yes' : 'No'}
-**Build Gold:** ${formData.buildGold ? 'Yes' : 'No'}
+You are an AI Investment Committee applying the Five Pillars framework to make disciplined investment decisions.
+
+**Design goal:** Every buy/sell decision must be *readable, auditable, and explainable in plain English*.
+
+---
+
+# EDUCATION-ONLY DISCLAIMER
+This is educational decision-support, not regulated advice. The user makes the final decision and bears all risk.
+
+---
+
+# THE FIVE PILLARS DOCTRINE
+
+## PILLAR 1: GRAHAM — Margin of Safety (MoS)
+- Must articulate a Margin of Safety: Valuation MoS, Balance-sheet MoS, or Structural MoS
+- **Graham's 7 Tests:** Adequate size, Strong financial condition (CR≥2), Earnings stability (5yr), Dividend record (10yr), Earnings growth (33% over 10yr), Moderate P/E (≤15), Moderate P/B (≤1.5), Graham Number (P/E × P/B ≤22.5)
+- If MoS cannot be stated plainly → must be SATELLITE or rejected
+
+## PILLAR 2: BUFFETT — Quality & Compounding
+Before any CORE or single-stock buy, confirm:
+1. Understandability (explain in 2 sentences)
+2. Moat type (switching costs / network effects / brand / cost advantage / regulation / scale)
+3. Pricing power evidence
+4. Capital efficiency (ROIC > WACC)
+5. Free cash flow quality
+6. Owner-oriented management
+7. Reinvestment runway
+
+## PILLAR 3: MUNGER — Inversion, Discipline, and "Don't Die"
+Every candidate must include:
+- **Inversion Test:** "How could this permanently impair capital?"
+- **Seductive Story Check:** what's likely misleading
+- **Base-rate Check:** what typically happens to similar assets
+- **Overconfidence Check:** what we're underestimating
+**Default action = inaction.** Any trade must justify why doing nothing is inferior this month.
+
+## PILLAR 4: MARKS — Cycles & Second-Level Thinking
+- Cycle positioning: risk appetite / credit conditions / breadth
+- What's priced in?
+- Second-level question: "What do I believe that the market doesn't?"
+- Risk control: "How are we avoiding being forced sellers?"
+
+## PILLAR 5: LYNCH — Know What You Own
+- **Lynch Label:** Stalwart / Fast Grower / Cyclic / Turnaround / Asset Play / Slow Grower
+- Plain-English driver of earnings/FCF
+- What must go right? What would show we're wrong early?
+
+---
+
+# INPUTS FOR THIS MONTH
+
+| Input | Value |
+|-------|-------|
+| Month | ${formData.month} |
+| Monthly contribution | £${formData.contribution} |
+| Account wrapper | ${formData.wrapper} |
+| Broker | ${formData.broker} |
+| Time horizon | ${formData.timeHorizon} years |
+| Core/Satellite target | ${formData.coreSatSplit} |
+| Drawdown trigger | ${formData.drawdownTrigger}% |
+| User sentiment | ${formData.marketSentiment}/10 |
+| US assets permitted | ${formData.usPermitted ? 'Yes' : 'No'} |
+| Bitcoin permitted | ${formData.btcPermitted ? 'Yes' : 'No'} |
+| Build gold this month | ${formData.buildGold ? 'Yes' : 'No'} |
+| Physical gold value | £${formData.goldValue} |
+| Bitcoin value | £${formData.btcValue} |
 
 **Market Pulse:**
 - UK: ${marketPulse.uk.score}/10 (${marketPulse.uk.label})
 - US: ${marketPulse.us.score}/10 (${marketPulse.us.label})
 
-**Current Holdings:**
-${formData.holdingsText || 'No holdings provided'}
+---
 
-**Stocks to Investigate:**
-${formData.potentialsText || 'None specified'}
+# CURRENT HOLDINGS
 
-**Physical Gold Value:** £${formData.goldValue}
-**Bitcoin Value:** £${formData.btcValue}
+${formData.holdingsText || 'No holdings provided - this appears to be a new portfolio.'}
 
-## YOUR TASK
+---
 
-1. **Determine Mode**: Based on triggers and sentiment, are we in LOW_RISK, BALANCED, or AGGRESSIVE mode?
+${hasPotentials ? `# STOCKS TO INVESTIGATE (Run Deep Analysis)
 
-2. **Review Holdings**: For each holding, assess doctrine fit (Graham value, Buffett quality, Munger risk, Marks timing, Lynch clarity)
+${formData.potentialsText}
 
-3. **Investigate Potentials**: If stocks to investigate were provided, run a mini-analysis on each using the Five Pillars
+For each stock above, run the STOCK INVESTIGATION PROTOCOL:
+1. Company Snapshot (sector, market cap, business description)
+2. Lynch Classification with justification
+3. Graham's 7 Tests with scores
+4. Buffett Quality Checklist (moat, pricing power, ROIC, FCF, management)
+5. Munger Inversion Analysis (3 scenarios of permanent capital impairment)
+6. Marks Second-Level Thinking (what's priced in, cycle positioning)
+7. Valuation Summary (multiple methods)
+8. Star Rating (⭐ to ⭐⭐⭐⭐⭐) based on weighted score
+9. Final Verdict with price targets
 
-4. **Make Recommendations**: Provide specific trade recommendations with:
-   - Exact amounts in £
-   - Rationale tied to doctrine
-   - What we're NOT doing and why
+---` : ''}
 
-5. **One-Line Thesis**: Summarise the month's strategy in one sentence
+# REQUIRED OUTPUT
 
-## OUTPUT FORMAT
+## PART A — TRIGGER SCAN + MODE SELECTION
 
-Please structure your response as follows:
+Provide trigger status table:
+| Trigger | Status | Justification |
+|---------|--------|---------------|
+| L1 (Drawdown >${formData.drawdownTrigger}%) | Yes/No | ... |
+| L2 (User anxious) | Yes/No | Based on sentiment ${formData.marketSentiment}/10 |
+| L3 (Near-term cash need) | No | ... |
+| A1 (Equities down ≥10% from 52-week high) | Yes/No | ... |
+| A2 (Portfolio at ATH + 3 months consistent) | Yes/No | ... |
 
-### MODE
-[State the mode and why]
+**Sentiment/Pendulum assessment:** Where are we on fear-greed spectrum? (1-10)
+**Mode this month:** Aggressive / Balanced / Low Risk
+**Munger Inversion:** "The biggest risk this month would be..."
 
-### EXECUTIVE SUMMARY
-[2-3 sentences summarising what to do this month]
+---
 
-### RECOMMENDED TRADES
-For each trade:
-- **[TICKER]** - [Name]
-- Amount: £[amount]
-- Rationale: [why, tied to doctrine]
+## PART B — HOLDINGS REVIEW
 
-### WHAT WE'RE NOT DOING
-[List things we're avoiding and why]
+| Holding | Current % | CORE/SAT | Lynch Label | Doctrine Fit | Still Meets Mandate? | Red Flags | Action |
+|---------|-----------|----------|-------------|--------------|---------------------|-----------|--------|
+| [For each holding...] |
 
-### HOLDINGS REVIEW
-[Brief doctrine check on each existing holding]
+**Summary:** [X reviewed. Y flagged. Z recommended for exit.]
 
-### INVESTIGATIONS
-[If potentials provided, mini Five Pillars analysis on each]
+---
 
-### DECISION JOURNAL ENTRY
-- Mode: [mode]
-- Confidence: [Low/Medium/High]
-- One-line thesis: "[thesis]"
+${hasPotentials ? `## PART C — STOCK INVESTIGATIONS
 
-Be specific, practical, and tie everything back to the Five Pillars framework.`
+For each potential stock, provide:
+
+### [TICKER] — [Company Name]
+
+**Company Snapshot:**
+- Sector/Industry: ...
+- Market Cap: ...
+- Business (2 sentences): ...
+
+**Lynch Classification:** [Label] — [Justification]
+
+**Graham's 7 Tests:**
+| Test | Criterion | Actual | Pass/Fail |
+|------|-----------|--------|-----------|
+| 1. Adequate Size | Revenue >£250m | ... | |
+| 2. Financial Condition | Current Ratio ≥2.0 | ... | |
+| 3. Earnings Stability | Positive EPS 5yr | ... | |
+| 4. Dividend Record | 10+ years | ... | |
+| 5. Earnings Growth | ≥33% over 10yr | ... | |
+| 6. Moderate P/E | ≤15 | ... | |
+| 7. Moderate P/B | ≤1.5 | ... | |
+| 8. Graham Number | P/E × P/B ≤22.5 | ... | |
+
+**Graham Score: X/7**
+
+**Buffett Quality Check:**
+- Moat: [Type] — [Strength: Strong/Moderate/Weak]
+- Pricing Power: [Evidence]
+- ROIC vs WACC: ...
+- FCF Quality: ...
+- Management: ...
+
+**Munger Inversion (How could this go to zero?):**
+1. [Scenario 1]
+2. [Scenario 2]
+3. [Scenario 3]
+
+**Marks Analysis:**
+- What consensus believes: ...
+- What's priced in: ...
+- Cycle position: ...
+
+**Valuation:**
+- Graham Number: £...
+- Current Price: £...
+- Margin of Safety: ...%
+
+**VERDICT:**
+| Dimension | Score |
+|-----------|-------|
+| Graham (Value) | X/10 |
+| Buffett (Quality) | X/10 |
+| Munger (Risk) | X/10 |
+| Marks (Timing) | X/10 |
+| Lynch (Clarity) | X/10 |
+| **Overall** | **X/10** |
+
+**Star Rating:** ⭐⭐⭐⭐⭐ / ⭐⭐⭐⭐ / ⭐⭐⭐ / ⭐⭐ / ⭐
+**Action:** Add to Shortlist / Watchlist / Pass
+**Suitable as:** CORE / SATELLITE / Neither
+
+---` : ''}
+
+## PART D — THREE COMMITTEE POSITIONS
+
+### AGGRESSIVE POSITION
+**Execution Plan:**
+- Trade(s): ...
+- Amounts: ...
+- Rationale (citing doctrine): ...
+
+### BALANCED POSITION
+**Execution Plan:**
+- Trade(s): ...
+- Amounts: ...
+- Rationale (citing doctrine): ...
+
+### LOW RISK POSITION
+**Execution Plan:**
+- Trade(s): ...
+- Amounts: ...
+- Rationale (citing doctrine): ...
+
+---
+
+## PART E — MUNGER VETO CHECK
+
+| Veto | Status | Evidence |
+|------|--------|----------|
+| V1: Cap compliance | Pass/Fail | ... |
+| V2: Thesis articulation | Pass/Fail | ... |
+| V3: Single stock due diligence | Pass/Fail/N/A | ... |
+| V4: Inversion check | Pass/Fail | ... |
+| V5: Circle of competence | Pass/Fail | ... |
+
+---
+
+## PART F — CHAIR SYNTHESIS
+
+**Pre-Flight Checklist:**
+- [ ] Wrapper confirmed + limits tracked
+- [ ] Trades within cost rule (1-2 max)
+- [ ] Position/sector limits checked
+- [ ] Core vs satellite respected
+- [ ] Doctrine check complete
+- [ ] Munger veto passed
+
+**FINAL PLAN — "This month we will:"**
+
+| Item | Ticker | Amount | Category |
+|------|--------|--------|----------|
+| Trade 1 | ... | £... | CORE/SAT |
+| Trade 2 (if any) | ... | £... | CORE/SAT |
+| Gold | ... | £... | Buy/No |
+| Bitcoin | ... | £... | Buy/No/N/A |
+
+**Total deployed:** £...
+
+**What I'm NOT Doing This Month + Why:**
+- [2-3 lines referencing doctrine/cost/limits]
+
+**Why This Wins (vs other positions):**
+- vs Aggressive: ...
+- vs Low Risk: ...
+
+**Red Team (How this could fail):**
+1. ...
+2. ...
+3. ...
+
+---
+
+## PART G — DECISION JOURNAL ENTRY
+
+| Field | Entry |
+|-------|-------|
+| Month/date | ${formData.month} |
+| Mode | [Selected mode] |
+| Trades executed | [List] |
+| Gold | Buy / No |
+| Bitcoin | Buy / No / N/A |
+| 1-sentence thesis | "..." |
+| Risks (2 bullets) | 1. ... 2. ... |
+| What changes my mind | ... |
+| Watch next month | 1. ... 2. ... |
+| Confidence | Low / Medium / High |
+| Munger Veto Status | All Pass / [List failures] |
+
+---
+
+Be specific, practical, and tie everything back to the Five Pillars framework. Use real data where possible and mark assumptions as **NEEDS CHECK**.`
 }
 
 function parseResponse(responseText) {
-  // Extract key sections from the response
   const result = {
-    mode: extractSection(responseText, 'MODE') || 'Balanced',
-    summary: extractSection(responseText, 'EXECUTIVE SUMMARY') || responseText.substring(0, 500),
+    mode: extractMode(responseText),
+    summary: extractSummary(responseText),
     trades: extractTrades(responseText),
+    triggerScan: extractSection(responseText, 'PART A', 'PART B') || extractSection(responseText, 'TRIGGER SCAN', 'PART B'),
+    holdingsReview: extractSection(responseText, 'PART B', 'PART C') || extractSection(responseText, 'HOLDINGS REVIEW', 'PART C'),
+    investigations: extractSection(responseText, 'STOCK INVESTIGATIONS', 'PART D') || extractSection(responseText, 'PART C', 'PART D'),
+    committeePositions: extractSection(responseText, 'PART D', 'PART E') || extractSection(responseText, 'THREE COMMITTEE POSITIONS', 'PART E'),
+    mungerVeto: extractSection(responseText, 'PART E', 'PART F') || extractSection(responseText, 'MUNGER VETO', 'PART F'),
+    chairSynthesis: extractSection(responseText, 'PART F', 'PART G') || extractSection(responseText, 'CHAIR SYNTHESIS', 'PART G'),
+    decisionJournal: extractSection(responseText, 'PART G', null) || extractSection(responseText, 'DECISION JOURNAL', null),
     fullAnalysis: responseText
   }
 
   return result
 }
 
-function extractSection(text, sectionName) {
-  const regex = new RegExp(`### ${sectionName}\\s*([\\s\\S]*?)(?=###|$)`, 'i')
-  const match = text.match(regex)
-  return match ? match[1].trim() : null
+function extractMode(text) {
+  // Look for mode in various formats
+  const modePatterns = [
+    /Mode this month:\s*(Aggressive|Balanced|Low Risk)/i,
+    /\*\*Mode\*\*[:\s]*(Aggressive|Balanced|Low Risk)/i,
+    /Mode[:\s]*(Aggressive|Balanced|Low Risk)/i,
+    /(AGGRESSIVE|BALANCED|LOW RISK)\s*MODE/i
+  ]
+
+  for (const pattern of modePatterns) {
+    const match = text.match(pattern)
+    if (match) {
+      return match[1].charAt(0).toUpperCase() + match[1].slice(1).toLowerCase()
+    }
+  }
+  return 'Balanced'
+}
+
+function extractSummary(responseText) {
+  // Try to get the chair synthesis final plan or executive summary
+  const chairMatch = responseText.match(/This month we will:[\s\S]*?(?=\*\*What I'm NOT|What I'm NOT|---|\n\n\*\*)/i)
+  if (chairMatch) {
+    return chairMatch[0].trim()
+  }
+
+  // Fallback to first substantial paragraph
+  const paragraphs = responseText.split('\n\n').filter(p => p.length > 100)
+  return paragraphs[0]?.substring(0, 500) || 'Analysis complete. Review full report below.'
+}
+
+function extractSection(text, startMarker, endMarker) {
+  const startPatterns = [
+    new RegExp(`## ${startMarker}[\\s\\S]*?(?=## ${endMarker}|$)`, 'i'),
+    new RegExp(`### ${startMarker}[\\s\\S]*?(?=### ${endMarker}|## ${endMarker}|$)`, 'i'),
+    new RegExp(`${startMarker}[\\s\\S]*?(?=${endMarker}|$)`, 'i')
+  ]
+
+  for (const pattern of startPatterns) {
+    const match = text.match(pattern)
+    if (match) {
+      return match[0].trim()
+    }
+  }
+  return null
 }
 
 function extractTrades(text) {
   const trades = []
-  const tradesSection = extractSection(text, 'RECOMMENDED TRADES')
-  
-  if (tradesSection) {
-    // Simple extraction - look for ticker patterns and amounts
-    const lines = tradesSection.split('\n')
-    let currentTrade = null
-    
-    for (const line of lines) {
-      // Look for ticker line (e.g., "**VWRP** - Vanguard...")
-      const tickerMatch = line.match(/\*\*([A-Z0-9]+)\*\*\s*[-–]\s*(.+)/)
-      if (tickerMatch) {
-        if (currentTrade) trades.push(currentTrade)
-        currentTrade = {
-          ticker: tickerMatch[1],
-          name: tickerMatch[2].trim(),
-          amount: 0,
-          rationale: ''
+
+  // Look for the final plan table
+  const finalPlanMatch = text.match(/This month we will:[\s\S]*?\|[\s\S]*?\|[\s\S]*?(?=\*\*Total|\n\n)/i)
+
+  if (finalPlanMatch) {
+    const tableLines = finalPlanMatch[0].split('\n').filter(line => line.includes('|') && !line.includes('---'))
+
+    for (const line of tableLines) {
+      const cells = line.split('|').map(c => c.trim()).filter(c => c)
+      if (cells.length >= 3 && cells[1] && !cells[0].toLowerCase().includes('item') && !cells[0].toLowerCase().includes('ticker')) {
+        const amountMatch = cells[2]?.match(/£([\d,]+)/)
+        if (amountMatch || cells[1].match(/[A-Z]{2,5}/)) {
+          trades.push({
+            ticker: cells[1],
+            name: cells[0],
+            amount: amountMatch ? amountMatch[1].replace(',', '') : '0',
+            rationale: cells[3] || ''
+          })
         }
       }
-      
-      // Look for amount
-      const amountMatch = line.match(/Amount:\s*£([\d,]+)/)
-      if (amountMatch && currentTrade) {
-        currentTrade.amount = amountMatch[1].replace(',', '')
-      }
-      
-      // Look for rationale
-      const rationaleMatch = line.match(/Rationale:\s*(.+)/)
-      if (rationaleMatch && currentTrade) {
-        currentTrade.rationale = rationaleMatch[1].trim()
-      }
     }
-    
-    if (currentTrade) trades.push(currentTrade)
   }
-  
-  return trades
+
+  // Also look for **TICKER** format
+  const tickerMatches = text.matchAll(/\*\*([A-Z0-9]{2,6})\*\*\s*[-–—]\s*([^\n]+)/g)
+  for (const match of tickerMatches) {
+    const existingTrade = trades.find(t => t.ticker === match[1])
+    if (!existingTrade) {
+      const amountLine = text.substring(match.index, match.index + 500)
+      const amountMatch = amountLine.match(/Amount:\s*£([\d,]+)/i)
+      const rationaleMatch = amountLine.match(/Rationale:\s*([^\n]+)/i)
+
+      trades.push({
+        ticker: match[1],
+        name: match[2].trim(),
+        amount: amountMatch ? amountMatch[1].replace(',', '') : '0',
+        rationale: rationaleMatch ? rationaleMatch[1].trim() : ''
+      })
+    }
+  }
+
+  return trades.filter(t => t.ticker && t.ticker !== 'Ticker' && t.ticker !== '...')
 }

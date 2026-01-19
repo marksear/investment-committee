@@ -38,6 +38,55 @@ export default function InvestmentCommitteeApp() {
 
   const [showUKSources, setShowUKSources] = useState(false)
   const [showUSSources, setShowUSSources] = useState(false)
+  const [holdingsFileName, setHoldingsFileName] = useState('')
+  const [potentialsFileName, setPotentialsFileName] = useState('')
+
+  // CSV parsing function
+  const parseCSV = (csvText) => {
+    const lines = csvText.trim().split('\n')
+    if (lines.length < 2) return ''
+
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase())
+    const rows = lines.slice(1)
+
+    return rows.map(row => {
+      const values = row.split(',').map(v => v.trim())
+      const obj = {}
+      headers.forEach((h, i) => {
+        obj[h] = values[i] || ''
+      })
+
+      // Format as: Name, Ticker, Value (or Name, Ticker for potentials)
+      const name = obj.investment || obj.name || obj.company || values[0] || ''
+      const ticker = obj.ticker || obj.symbol || values[1] || ''
+      const value = obj['value (£)'] || obj.value || obj.amount || values[2] || ''
+
+      if (value) {
+        return `${name}, ${ticker}, ${value}`
+      }
+      return `${name}, ${ticker}`
+    }).filter(line => line.trim()).join('\n')
+  }
+
+  const handleFileUpload = (e, type) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const text = event.target.result
+      const parsed = parseCSV(text)
+
+      if (type === 'holdings') {
+        setFormData({ ...formData, holdingsText: parsed })
+        setHoldingsFileName(file.name)
+      } else {
+        setFormData({ ...formData, potentialsText: parsed })
+        setPotentialsFileName(file.name)
+      }
+    }
+    reader.readAsText(file)
+  }
 
   const sentimentScenarios = [
     { id: 'cautious', value: 2, icon: ShieldAlert, title: 'Hold back', description: 'Markets feel expensive or uncertain' },
@@ -426,10 +475,34 @@ export default function InvestmentCommitteeApp() {
         return (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-gray-900">Your Current Holdings</h2>
-            <p className="text-gray-600">Enter your portfolio holdings (one per line: Name, Ticker, Value)</p>
-            
+            <p className="text-gray-600">Upload a CSV or enter your portfolio holdings manually</p>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Holdings</label>
+
+              {/* CSV Upload */}
+              <div className="mb-3">
+                <label className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-amber-500 hover:bg-amber-50 transition-colors">
+                  <Upload className="w-5 h-5 text-gray-400" />
+                  <span className="text-sm text-gray-600">
+                    {holdingsFileName || 'Upload CSV file'}
+                  </span>
+                  <input
+                    type="file"
+                    accept=".csv"
+                    onChange={(e) => handleFileUpload(e, 'holdings')}
+                    className="hidden"
+                  />
+                </label>
+                {holdingsFileName && (
+                  <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                    <Check className="w-3 h-3" /> Loaded: {holdingsFileName}
+                  </p>
+                )}
+              </div>
+
+              <p className="text-xs text-gray-500 mb-2 text-center">— or enter manually —</p>
+
               <textarea
                 value={formData.holdingsText}
                 onChange={(e) => setFormData({ ...formData, holdingsText: e.target.value })}
@@ -444,7 +517,31 @@ Cash, CASH, £176"
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Stocks to Investigate (Optional)</label>
-              <p className="text-xs text-gray-500 mb-2">Add stocks you're considering for deep analysis</p>
+              <p className="text-xs text-gray-500 mb-2">Add stocks for deep Five Pillars analysis with Graham's 7 tests, Buffett quality checks, and Munger inversion</p>
+
+              {/* CSV Upload for Potentials */}
+              <div className="mb-3">
+                <label className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-amber-500 hover:bg-amber-50 transition-colors">
+                  <Upload className="w-5 h-5 text-gray-400" />
+                  <span className="text-sm text-gray-600">
+                    {potentialsFileName || 'Upload CSV file'}
+                  </span>
+                  <input
+                    type="file"
+                    accept=".csv"
+                    onChange={(e) => handleFileUpload(e, 'potentials')}
+                    className="hidden"
+                  />
+                </label>
+                {potentialsFileName && (
+                  <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                    <Check className="w-3 h-3" /> Loaded: {potentialsFileName}
+                  </p>
+                )}
+              </div>
+
+              <p className="text-xs text-gray-500 mb-2 text-center">— or enter manually —</p>
+
               <textarea
                 value={formData.potentialsText}
                 onChange={(e) => setFormData({ ...formData, potentialsText: e.target.value })}
@@ -459,9 +556,9 @@ Marks & Spencer, MKS"
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <h3 className="font-medium text-blue-900 mb-2">Tips</h3>
               <ul className="text-sm text-blue-800 space-y-1">
+                <li>• CSV should have columns: Investment/Name, Ticker, Value (£)</li>
                 <li>• Include all holdings including cash</li>
-                <li>• Values should be current market value in £</li>
-                <li>• Potentials are stocks you want the committee to investigate</li>
+                <li>• Potentials will receive full investigation with Graham's 7 tests, Buffett quality checks, Munger inversion analysis, and star ratings</li>
               </ul>
             </div>
           </div>
