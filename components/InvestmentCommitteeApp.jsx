@@ -1,0 +1,1005 @@
+'use client'
+
+import React, { useState } from 'react'
+import { 
+  Upload, FileText, TrendingUp, Shield, Brain, ChevronRight, ChevronLeft, 
+  Check, AlertCircle, Loader2, BarChart3, PieChart, BookOpen, Star, 
+  AlertTriangle, Download, Share2, ChevronDown, Target, Scale, Eye, 
+  Lightbulb, XCircle, TrendingDown, ArrowUpRight, ShieldAlert, Zap, 
+  Rocket, Globe, Newspaper, BarChart2 
+} from 'lucide-react'
+
+export default function InvestmentCommitteeApp() {
+  const [step, setStep] = useState(0)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [analysisComplete, setAnalysisComplete] = useState(false)
+  const [analysisResult, setAnalysisResult] = useState(null)
+  const [analysisError, setAnalysisError] = useState(null)
+  const [activeReportTab, setActiveReportTab] = useState('summary')
+  const [expandedStock, setExpandedStock] = useState(null)
+  
+  const [formData, setFormData] = useState({
+    month: new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }),
+    contribution: '500',
+    wrapper: 'ISA',
+    broker: 'AJ Bell',
+    holdingsText: '',
+    potentialsText: '',
+    goldValue: '0',
+    btcValue: '0',
+    coreSatSplit: '85/15',
+    timeHorizon: '10',
+    marketSentiment: 5,
+    drawdownTrigger: '8',
+    usPermitted: true,
+    btcPermitted: false,
+    buildGold: false,
+  })
+
+  const [showUKSources, setShowUKSources] = useState(false)
+  const [showUSSources, setShowUSSources] = useState(false)
+
+  const sentimentScenarios = [
+    { id: 'cautious', value: 2, icon: ShieldAlert, title: 'Hold back', description: 'Markets feel expensive or uncertain' },
+    { id: 'normal', value: 5, icon: Target, title: 'Stick to plan', description: 'Normal month, follow the strategy' },
+    { id: 'opportunistic', value: 7, icon: Zap, title: 'Lean in', description: 'I see some value emerging' },
+    { id: 'aggressive', value: 9, icon: Rocket, title: 'Deploy more', description: 'Real opportunities here' },
+  ]
+
+  const getSentimentLabel = (value) => {
+    if (value <= 2) return { label: 'Very Cautious', color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' }
+    if (value <= 4) return { label: 'Cautious', color: 'text-blue-500', bg: 'bg-blue-50', border: 'border-blue-200' }
+    if (value <= 6) return { label: 'Balanced', color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200' }
+    if (value <= 8) return { label: 'Opportunistic', color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200' }
+    return { label: 'Aggressive', color: 'text-green-700', bg: 'bg-green-100', border: 'border-green-300' }
+  }
+
+  const getSentimentDescription = (value) => {
+    if (value <= 2) return "Committee will favour cash, apply stricter quality filters"
+    if (value <= 4) return "Committee will be selective, prefer quality over quantity"
+    if (value <= 6) return "Standard balanced approach to allocation"
+    if (value <= 8) return "Committee will look for opportunities to deploy more"
+    return "Maximum deployment posture, accept higher risk"
+  }
+
+  // Market Pulse Data (in production, this would come from API/cache)
+  const marketPulseData = {
+    uk: {
+      score: 5.8,
+      label: 'Cautiously Optimistic',
+      change: '+0.3',
+      changeDirection: 'up',
+      lastUpdated: '2 hours ago',
+      sources: [
+        { name: 'Financial Times', sentiment: 6, headline: 'FTSE 100 holds gains amid rate cut hopes' },
+        { name: 'The Times', sentiment: 5, headline: 'UK economy shows resilience despite headwinds' },
+        { name: 'The Guardian', sentiment: 4, headline: 'Inflation concerns persist as BoE meets' },
+        { name: 'Telegraph', sentiment: 6, headline: 'Sterling strengthens on positive data' },
+        { name: 'BBC Business', sentiment: 5, headline: 'Mixed signals from retail sector' },
+        { name: 'Sky News Business', sentiment: 6, headline: 'House prices edge higher in January' },
+        { name: 'Reuters UK', sentiment: 6, headline: 'UK stocks attractive to foreign buyers' },
+        { name: 'Bloomberg UK', sentiment: 7, headline: 'London remains top financial hub' },
+        { name: 'Investors Chronicle', sentiment: 5, headline: 'Value opportunities in mid-caps' },
+        { name: 'Shares Magazine', sentiment: 6, headline: 'Dividend stocks back in favour' },
+        { name: 'This Is Money', sentiment: 5, headline: 'Savers face rate cut reality' },
+        { name: 'MoneyWeek', sentiment: 7, headline: 'Contrarian case for UK equities' },
+        { name: 'AJ Bell', sentiment: 6, headline: 'ISA season outlook positive' },
+        { name: 'Hargreaves Lansdown', sentiment: 6, headline: 'FTSE 100 valuations attractive' },
+        { name: 'Interactive Investor', sentiment: 5, headline: 'Defensive positioning advised' },
+        { name: 'Citywire', sentiment: 6, headline: 'Fund managers turn bullish on UK' },
+        { name: 'Trustnet', sentiment: 5, headline: 'Bond funds see inflows' },
+        { name: 'Morningstar UK', sentiment: 6, headline: 'Undervalued opportunities remain' },
+        { name: 'CNBC Europe', sentiment: 6, headline: 'European markets rally continues' },
+        { name: 'MarketWatch UK', sentiment: 5, headline: 'Caution ahead of earnings season' },
+      ]
+    },
+    us: {
+      score: 7.2,
+      label: 'Bullish',
+      change: '+0.5',
+      changeDirection: 'up',
+      lastUpdated: '2 hours ago',
+      sources: [
+        { name: 'Wall Street Journal', sentiment: 7, headline: 'S&P 500 eyes new record highs' },
+        { name: 'New York Times', sentiment: 6, headline: 'Tech rally shows no signs of slowing' },
+        { name: 'Bloomberg', sentiment: 8, headline: 'Bull market enters third year' },
+        { name: 'CNBC', sentiment: 7, headline: 'Earnings season off to strong start' },
+        { name: 'Reuters', sentiment: 7, headline: 'Fed signals patience on rates' },
+        { name: 'MarketWatch', sentiment: 7, headline: 'Investor sentiment hits 2-year high' },
+        { name: 'Barrons', sentiment: 8, headline: 'Why stocks can keep climbing' },
+        { name: 'Forbes', sentiment: 7, headline: 'AI boom drives market gains' },
+        { name: 'Financial Times US', sentiment: 6, headline: 'Valuations stretched but supported' },
+        { name: 'Yahoo Finance', sentiment: 7, headline: 'Retail investors pile back in' },
+        { name: 'Investors Business Daily', sentiment: 8, headline: 'Market in confirmed uptrend' },
+        { name: 'Seeking Alpha', sentiment: 7, headline: 'Growth stocks lead advance' },
+        { name: 'Motley Fool', sentiment: 7, headline: 'Time in market beats timing' },
+        { name: 'Kiplinger', sentiment: 6, headline: 'Diversification still matters' },
+        { name: 'CNN Business', sentiment: 7, headline: 'Consumer spending remains strong' },
+        { name: 'Fox Business', sentiment: 8, headline: 'Economic data beats expectations' },
+        { name: 'The Street', sentiment: 7, headline: 'Momentum favours buyers' },
+        { name: 'Benzinga', sentiment: 8, headline: 'Options flow signals confidence' },
+        { name: 'Zacks', sentiment: 7, headline: 'Earnings revisions trending up' },
+        { name: 'Morningstar US', sentiment: 6, headline: 'Some sectors look overvalued' },
+      ]
+    }
+  }
+
+  const getMarketSentimentColor = (score) => {
+    if (score <= 3) return { text: 'text-red-600', bg: 'bg-red-500', light: 'bg-red-100' }
+    if (score <= 4.5) return { text: 'text-orange-600', bg: 'bg-orange-500', light: 'bg-orange-100' }
+    if (score <= 5.5) return { text: 'text-amber-600', bg: 'bg-amber-500', light: 'bg-amber-100' }
+    if (score <= 7) return { text: 'text-lime-600', bg: 'bg-lime-500', light: 'bg-lime-100' }
+    return { text: 'text-green-600', bg: 'bg-green-500', light: 'bg-green-100' }
+  }
+
+  const getMarketSentimentLabel = (score) => {
+    if (score <= 2) return 'Very Bearish'
+    if (score <= 3.5) return 'Bearish'
+    if (score <= 4.5) return 'Slightly Bearish'
+    if (score <= 5.5) return 'Neutral'
+    if (score <= 6.5) return 'Cautiously Optimistic'
+    if (score <= 8) return 'Bullish'
+    return 'Very Bullish'
+  }
+
+  const steps = [
+    { title: 'Welcome', icon: BookOpen },
+    { title: 'Holdings', icon: Upload },
+    { title: 'This Month', icon: FileText },
+    { title: 'Preferences', icon: Shield },
+    { title: 'Review', icon: Check },
+    { title: 'Analysis', icon: Brain },
+  ]
+
+  const analysisSteps = [
+    'Reading portfolio data...',
+    'Scanning market conditions...',
+    'Checking trigger status (L1-L3, A1-A2)...',
+    'Reviewing existing holdings...',
+    'Applying Graham criteria...',
+    'Running Buffett quality checks...',
+    'Performing Munger inversion...',
+    'Analyzing Marks cycle positioning...',
+    'Building committee positions...',
+    'Chair synthesis in progress...',
+    'Running Munger veto checks...',
+    'Generating final recommendations...',
+  ]
+
+  const [currentAnalysisStep, setCurrentAnalysisStep] = useState(0)
+
+  const runAnalysis = async () => {
+    setIsAnalyzing(true)
+    setCurrentAnalysisStep(0)
+    setAnalysisError(null)
+    
+    // Animate through steps while waiting for API
+    const interval = setInterval(() => {
+      setCurrentAnalysisStep(prev => {
+        if (prev >= analysisSteps.length - 1) return prev
+        return prev + 1
+      })
+    }, 800)
+
+    try {
+      const response = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          formData,
+          marketPulse: {
+            uk: { score: marketPulseData.uk.score, label: marketPulseData.uk.label },
+            us: { score: marketPulseData.us.score, label: marketPulseData.us.label }
+          }
+        })
+      })
+
+      clearInterval(interval)
+
+      if (!response.ok) {
+        throw new Error('Analysis failed')
+      }
+
+      const result = await response.json()
+      setAnalysisResult(result)
+      setCurrentAnalysisStep(analysisSteps.length - 1)
+      
+      setTimeout(() => {
+        setIsAnalyzing(false)
+        setAnalysisComplete(true)
+      }, 500)
+
+    } catch (error) {
+      clearInterval(interval)
+      setAnalysisError(error.message)
+      setIsAnalyzing(false)
+    }
+  }
+
+  // Star rating component
+  const StarRating = ({ rating, max = 5 }) => (
+    <div className="flex gap-0.5">
+      {[...Array(max)].map((_, i) => (
+        <Star
+          key={i}
+          className={`w-4 h-4 ${i < rating ? 'fill-amber-400 text-amber-400' : 'text-gray-300'}`}
+        />
+      ))}
+    </div>
+  )
+
+  const renderStep = () => {
+    switch (step) {
+      case 0:
+        return (
+          <div className="space-y-8">
+            {/* Hero Section */}
+            <div className="text-center space-y-6">
+              <div className="w-20 h-20 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl mx-auto flex items-center justify-center shadow-lg">
+                <TrendingUp className="w-10 h-10 text-white" />
+              </div>
+              <h1 className="text-3xl font-bold text-gray-900">AI Investment Committee</h1>
+              <p className="text-gray-600 max-w-md mx-auto">
+                Make disciplined investment decisions using the wisdom of Graham, Buffett, Munger, Marks & Lynch.
+              </p>
+              <div className="grid grid-cols-5 gap-2 max-w-md mx-auto pt-4">
+                {['Graham', 'Buffett', 'Munger', 'Marks', 'Lynch'].map((name) => (
+                  <div key={name} className="text-center">
+                    <div className="w-12 h-12 bg-gray-100 rounded-full mx-auto mb-1 flex items-center justify-center text-lg font-bold text-gray-700">
+                      {name[0]}
+                    </div>
+                    <span className="text-xs text-gray-500">{name}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Market Pulse Section - Full Version */}
+            <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 text-white">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center">
+                    <BarChart2 className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h2 className="font-bold text-lg">Market Pulse</h2>
+                    <p className="text-gray-400 text-sm">Live sentiment from 40 financial sources</p>
+                  </div>
+                </div>
+                <div className="text-xs text-gray-400">
+                  Updated {marketPulseData.uk.lastUpdated}
+                </div>
+              </div>
+
+              {/* Two Market Gauges */}
+              <div className="grid md:grid-cols-2 gap-4">
+                {/* UK Market */}
+                <div className="bg-white rounded-xl text-gray-900 overflow-hidden">
+                  <div className="p-4 border-b border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xl">🇬🇧</span>
+                        <span className="font-bold">UK Markets</span>
+                      </div>
+                      <div className={`flex items-center gap-1 text-sm ${marketPulseData.uk.changeDirection === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+                        {marketPulseData.uk.changeDirection === 'up' ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                        {marketPulseData.uk.change}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <p className={`text-2xl font-bold ${getMarketSentimentColor(marketPulseData.uk.score).text}`}>
+                          {marketPulseData.uk.score.toFixed(1)}
+                        </p>
+                        <p className="text-sm text-gray-500">{marketPulseData.uk.label}</p>
+                      </div>
+                      <div className={`px-3 py-1 rounded-full text-xs font-medium ${getMarketSentimentColor(marketPulseData.uk.score).light} ${getMarketSentimentColor(marketPulseData.uk.score).text}`}>
+                        {getMarketSentimentLabel(marketPulseData.uk.score)}
+                      </div>
+                    </div>
+                    <div className="relative h-3 rounded-full overflow-hidden bg-gradient-to-r from-red-500 via-amber-500 to-green-500">
+                      <div 
+                        className="absolute top-1/2 -translate-y-1/2 w-4 h-5 bg-white border-2 border-gray-800 rounded-sm shadow-lg"
+                        style={{ left: `calc(${(marketPulseData.uk.score / 10) * 100}% - 8px)` }}
+                      />
+                    </div>
+                    <div className="flex justify-between mt-1 text-xs text-gray-400">
+                      <span>Bearish</span>
+                      <span>Neutral</span>
+                      <span>Bullish</span>
+                    </div>
+                  </div>
+                  <div className="border-t border-gray-100">
+                    <button
+                      onClick={() => setShowUKSources(!showUKSources)}
+                      className="w-full px-4 py-2 flex items-center justify-between text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+                    >
+                      <span className="flex items-center gap-2">
+                        <Newspaper className="w-4 h-4" />
+                        {marketPulseData.uk.sources.length} sources
+                      </span>
+                      <ChevronDown className={`w-4 h-4 transition-transform ${showUKSources ? 'rotate-180' : ''}`} />
+                    </button>
+                    {showUKSources && (
+                      <div className="px-4 pb-4 max-h-48 overflow-y-auto">
+                        <div className="space-y-1">
+                          {marketPulseData.uk.sources.map((source, i) => (
+                            <div key={i} className="flex items-center gap-2 p-2 rounded bg-gray-50 text-xs">
+                              <div className={`w-6 h-6 rounded flex items-center justify-center text-white font-bold ${getMarketSentimentColor(source.sentiment).bg}`}>
+                                {source.sentiment}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium truncate">{source.name}</p>
+                                <p className="text-gray-500 truncate">{source.headline}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* US Market */}
+                <div className="bg-white rounded-xl text-gray-900 overflow-hidden">
+                  <div className="p-4 border-b border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xl">🇺🇸</span>
+                        <span className="font-bold">US Markets</span>
+                      </div>
+                      <div className={`flex items-center gap-1 text-sm ${marketPulseData.us.changeDirection === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+                        {marketPulseData.us.changeDirection === 'up' ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                        {marketPulseData.us.change}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <p className={`text-2xl font-bold ${getMarketSentimentColor(marketPulseData.us.score).text}`}>
+                          {marketPulseData.us.score.toFixed(1)}
+                        </p>
+                        <p className="text-sm text-gray-500">{marketPulseData.us.label}</p>
+                      </div>
+                      <div className={`px-3 py-1 rounded-full text-xs font-medium ${getMarketSentimentColor(marketPulseData.us.score).light} ${getMarketSentimentColor(marketPulseData.us.score).text}`}>
+                        {getMarketSentimentLabel(marketPulseData.us.score)}
+                      </div>
+                    </div>
+                    <div className="relative h-3 rounded-full overflow-hidden bg-gradient-to-r from-red-500 via-amber-500 to-green-500">
+                      <div 
+                        className="absolute top-1/2 -translate-y-1/2 w-4 h-5 bg-white border-2 border-gray-800 rounded-sm shadow-lg"
+                        style={{ left: `calc(${(marketPulseData.us.score / 10) * 100}% - 8px)` }}
+                      />
+                    </div>
+                    <div className="flex justify-between mt-1 text-xs text-gray-400">
+                      <span>Bearish</span>
+                      <span>Neutral</span>
+                      <span>Bullish</span>
+                    </div>
+                  </div>
+                  <div className="border-t border-gray-100">
+                    <button
+                      onClick={() => setShowUSSources(!showUSSources)}
+                      className="w-full px-4 py-2 flex items-center justify-between text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+                    >
+                      <span className="flex items-center gap-2">
+                        <Newspaper className="w-4 h-4" />
+                        {marketPulseData.us.sources.length} sources
+                      </span>
+                      <ChevronDown className={`w-4 h-4 transition-transform ${showUSSources ? 'rotate-180' : ''}`} />
+                    </button>
+                    {showUSSources && (
+                      <div className="px-4 pb-4 max-h-48 overflow-y-auto">
+                        <div className="space-y-1">
+                          {marketPulseData.us.sources.map((source, i) => (
+                            <div key={i} className="flex items-center gap-2 p-2 rounded bg-gray-50 text-xs">
+                              <div className={`w-6 h-6 rounded flex items-center justify-center text-white font-bold ${getMarketSentimentColor(source.sentiment).bg}`}>
+                                {source.sentiment}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium truncate">{source.name}</p>
+                                <p className="text-gray-500 truncate">{source.headline}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Disclaimer */}
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <p className="text-sm text-amber-800">
+                <strong>Educational tool only.</strong> Not financial advice. You make all final decisions.
+              </p>
+            </div>
+          </div>
+        )
+
+      case 1:
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold text-gray-900">Your Current Holdings</h2>
+            <p className="text-gray-600">Enter your portfolio holdings (one per line: Name, Ticker, Value)</p>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Holdings</label>
+              <textarea
+                value={formData.holdingsText}
+                onChange={(e) => setFormData({ ...formData, holdingsText: e.target.value })}
+                placeholder="Example:
+Vanguard FTSE All-World, VWRP, £649
+HSBC Holdings, HSBA, £370
+Cash, CASH, £176"
+                rows={6}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 font-mono text-sm"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Stocks to Investigate (Optional)</label>
+              <p className="text-xs text-gray-500 mb-2">Add stocks you're considering for deep analysis</p>
+              <textarea
+                value={formData.potentialsText}
+                onChange={(e) => setFormData({ ...formData, potentialsText: e.target.value })}
+                placeholder="Example:
+Diageo, DGE
+Marks & Spencer, MKS"
+                rows={3}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 font-mono text-sm"
+              />
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h3 className="font-medium text-blue-900 mb-2">Tips</h3>
+              <ul className="text-sm text-blue-800 space-y-1">
+                <li>• Include all holdings including cash</li>
+                <li>• Values should be current market value in £</li>
+                <li>• Potentials are stocks you want the committee to investigate</li>
+              </ul>
+            </div>
+          </div>
+        )
+
+      case 2:
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold text-gray-900">This Month's Inputs</h2>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Month</label>
+                <input
+                  type="text"
+                  value={formData.month}
+                  onChange={(e) => setFormData({ ...formData, month: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Contribution (£)</label>
+                <input
+                  type="number"
+                  value={formData.contribution}
+                  onChange={(e) => setFormData({ ...formData, contribution: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Account Wrapper</label>
+                <select
+                  value={formData.wrapper}
+                  onChange={(e) => setFormData({ ...formData, wrapper: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                >
+                  <option value="ISA">ISA</option>
+                  <option value="SIPP">SIPP</option>
+                  <option value="GIA">GIA</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Broker</label>
+                <input
+                  type="text"
+                  value={formData.broker}
+                  onChange={(e) => setFormData({ ...formData, broker: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                />
+              </div>
+            </div>
+
+            {/* Compact Inline Market Pulse */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">Current Market Sentiment</label>
+              <div className="flex gap-3 mb-6">
+                <div className="flex-1 bg-gray-50 rounded-lg p-3 border border-gray-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium">🇬🇧 UK</span>
+                    <span className={`text-lg font-bold ${getMarketSentimentColor(marketPulseData.uk.score).text}`}>
+                      {marketPulseData.uk.score.toFixed(1)}
+                    </span>
+                  </div>
+                  <div className="h-2 rounded-full bg-gradient-to-r from-red-500 via-amber-500 to-green-500 relative">
+                    <div 
+                      className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white border-2 border-gray-700 rounded-full"
+                      style={{ left: `calc(${(marketPulseData.uk.score / 10) * 100}% - 6px)` }}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">{getMarketSentimentLabel(marketPulseData.uk.score)}</p>
+                </div>
+                <div className="flex-1 bg-gray-50 rounded-lg p-3 border border-gray-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium">🇺🇸 US</span>
+                    <span className={`text-lg font-bold ${getMarketSentimentColor(marketPulseData.us.score).text}`}>
+                      {marketPulseData.us.score.toFixed(1)}
+                    </span>
+                  </div>
+                  <div className="h-2 rounded-full bg-gradient-to-r from-red-500 via-amber-500 to-green-500 relative">
+                    <div 
+                      className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white border-2 border-gray-700 rounded-full"
+                      style={{ left: `calc(${(marketPulseData.us.score / 10) * 100}% - 6px)` }}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">{getMarketSentimentLabel(marketPulseData.us.score)}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* User Sentiment Input */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">How do you feel about the markets this month?</label>
+              <p className="text-xs text-gray-500 mb-3">This helps the committee calibrate its recommendations</p>
+              
+              <div className="grid grid-cols-4 gap-2 mb-4">
+                {sentimentScenarios.map(scenario => {
+                  const isSelected = formData.marketSentiment === scenario.value
+                  return (
+                    <button
+                      key={scenario.id}
+                      onClick={() => setFormData({ ...formData, marketSentiment: scenario.value })}
+                      className={`p-3 rounded-xl border-2 text-center transition-all ${
+                        isSelected 
+                          ? 'border-amber-500 bg-amber-50' 
+                          : 'border-gray-200 hover:border-gray-300 bg-white'
+                      }`}
+                    >
+                      <scenario.icon className={`w-5 h-5 mx-auto mb-1 ${isSelected ? 'text-amber-600' : 'text-gray-400'}`} />
+                      <span className={`text-xs font-medium ${isSelected ? 'text-amber-700' : 'text-gray-600'}`}>
+                        {scenario.title}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-xs text-gray-500">Fine-tune:</p>
+                <input
+                  type="range"
+                  min="0"
+                  max="10"
+                  value={formData.marketSentiment}
+                  onChange={(e) => setFormData({ ...formData, marketSentiment: parseInt(e.target.value) })}
+                  className="w-full h-2 bg-gradient-to-r from-blue-400 via-amber-400 to-green-500 rounded-full appearance-none cursor-pointer"
+                />
+                <div className="flex justify-between text-xs text-gray-400">
+                  <span>Cautious</span>
+                  <span>Balanced</span>
+                  <span>Aggressive</span>
+                </div>
+              </div>
+
+              {(() => {
+                const info = getSentimentLabel(formData.marketSentiment)
+                return (
+                  <div className={`mt-3 rounded-lg p-3 ${info.bg} border ${info.border}`}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className={`font-medium ${info.color}`}>{info.label}</p>
+                        <p className="text-xs text-gray-600">{getSentimentDescription(formData.marketSentiment)}</p>
+                      </div>
+                      <div className={`text-2xl font-bold ${info.color}`}>{formData.marketSentiment}</div>
+                    </div>
+                  </div>
+                )
+              })()}
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Physical Gold (£)</label>
+                <input
+                  type="number"
+                  value={formData.goldValue}
+                  onChange={(e) => setFormData({ ...formData, goldValue: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Bitcoin (£)</label>
+                <input
+                  type="number"
+                  value={formData.btcValue}
+                  onChange={(e) => setFormData({ ...formData, btcValue: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                />
+              </div>
+            </div>
+          </div>
+        )
+
+      case 3:
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold text-gray-900">Your Preferences</h2>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Core/Satellite Split Target</label>
+              <select
+                value={formData.coreSatSplit}
+                onChange={(e) => setFormData({ ...formData, coreSatSplit: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+              >
+                <option value="90/10">90% Core / 10% Satellite (Conservative)</option>
+                <option value="85/15">85% Core / 15% Satellite (Balanced)</option>
+                <option value="70/30">70% Core / 30% Satellite (Growth)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Time Horizon (Years)</label>
+              <input
+                type="range"
+                min="1"
+                max="30"
+                value={formData.timeHorizon}
+                onChange={(e) => setFormData({ ...formData, timeHorizon: e.target.value })}
+                className="w-full accent-amber-500"
+              />
+              <div className="flex justify-between text-sm text-gray-500">
+                <span>1 year</span>
+                <span className="font-medium text-amber-600">{formData.timeHorizon} years</span>
+                <span>30 years</span>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Drawdown Trigger</label>
+              <div className="grid grid-cols-2 gap-2">
+                {['8', '12'].map((val) => (
+                  <button
+                    key={val}
+                    onClick={() => setFormData({ ...formData, drawdownTrigger: val })}
+                    className={`px-4 py-3 rounded-lg border-2 transition-colors ${
+                      formData.drawdownTrigger === val
+                        ? 'border-amber-500 bg-amber-50 text-amber-700'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <span className="font-medium">{val}%</span>
+                    <span className="text-sm text-gray-500 block">{val === '8' ? 'Standard' : 'Relaxed'}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-gray-700">Permissions</label>
+              {[
+                { key: 'usPermitted', label: 'US assets permitted' },
+                { key: 'btcPermitted', label: 'Bitcoin permitted' },
+                { key: 'buildGold', label: 'Build gold position this month' },
+              ].map(({ key, label }) => (
+                <label key={key} className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData[key]}
+                    onChange={(e) => setFormData({ ...formData, [key]: e.target.checked })}
+                    className="w-5 h-5 rounded border-gray-300 text-amber-500 focus:ring-amber-500"
+                  />
+                  <span className="text-gray-700">{label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        )
+
+      case 4:
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold text-gray-900">Review Your Inputs</h2>
+            
+            <div className="bg-gray-50 rounded-xl p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <span className="text-sm text-gray-500">Month</span>
+                  <p className="font-medium">{formData.month}</p>
+                </div>
+                <div>
+                  <span className="text-sm text-gray-500">Contribution</span>
+                  <p className="font-medium">£{formData.contribution}</p>
+                </div>
+                <div>
+                  <span className="text-sm text-gray-500">Wrapper</span>
+                  <p className="font-medium">{formData.wrapper}</p>
+                </div>
+                <div>
+                  <span className="text-sm text-gray-500">Broker</span>
+                  <p className="font-medium">{formData.broker}</p>
+                </div>
+                <div>
+                  <span className="text-sm text-gray-500">Holdings</span>
+                  <p className="font-medium flex items-center gap-1">
+                    {formData.holdingsText ? (
+                      <><Check className="w-4 h-4 text-green-500" /> Entered</>
+                    ) : (
+                      <><AlertCircle className="w-4 h-4 text-amber-500" /> None entered</>
+                    )}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-sm text-gray-500">Potentials</span>
+                  <p className="font-medium flex items-center gap-1">
+                    {formData.potentialsText ? (
+                      <><Check className="w-4 h-4 text-green-500" /> Entered</>
+                    ) : (
+                      <span className="text-gray-400">None</span>
+                    )}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-sm text-gray-500">Market Sentiment</span>
+                  <p className="font-medium">{formData.marketSentiment}/10 — {getSentimentLabel(formData.marketSentiment).label}</p>
+                </div>
+                <div>
+                  <span className="text-sm text-gray-500">Time Horizon</span>
+                  <p className="font-medium">{formData.timeHorizon} years</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <h3 className="font-medium text-amber-900 mb-2 flex items-center gap-2">
+                <Brain className="w-5 h-5" />
+                What happens next?
+              </h3>
+              <ul className="text-sm text-amber-800 space-y-1">
+                <li>• Trigger scan to determine risk mode</li>
+                <li>• Holdings review with doctrine checks</li>
+                {formData.potentialsText && <li>• Deep investigation of potential stocks</li>}
+                <li>• Three committee positions (Aggressive/Balanced/Low Risk)</li>
+                <li>• Chair synthesis with final recommendation</li>
+              </ul>
+            </div>
+          </div>
+        )
+
+      case 5:
+        if (isAnalyzing) {
+          return (
+            <div className="text-center py-8 space-y-6">
+              <div className="relative w-20 h-20 mx-auto">
+                <div className="absolute inset-0 border-4 border-amber-200 rounded-full"></div>
+                <div className="absolute inset-0 border-4 border-amber-500 rounded-full border-t-transparent animate-spin"></div>
+                <Brain className="absolute inset-0 m-auto w-8 h-8 text-amber-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900">Investment Committee in Session</h2>
+              
+              <div className="max-w-md mx-auto text-left bg-gray-50 rounded-xl p-4">
+                <div className="space-y-2">
+                  {analysisSteps.map((stepText, i) => (
+                    <div key={i} className={`flex items-center gap-3 text-sm transition-all duration-300 ${
+                      i < currentAnalysisStep ? 'text-green-600' : 
+                      i === currentAnalysisStep ? 'text-amber-600 font-medium' : 
+                      'text-gray-300'
+                    }`}>
+                      {i < currentAnalysisStep ? (
+                        <Check className="w-4 h-4 flex-shrink-0" />
+                      ) : i === currentAnalysisStep ? (
+                        <Loader2 className="w-4 h-4 flex-shrink-0 animate-spin" />
+                      ) : (
+                        <div className="w-4 h-4 flex-shrink-0" />
+                      )}
+                      <span>{stepText}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )
+        }
+
+        if (analysisError) {
+          return (
+            <div className="text-center py-12 space-y-6">
+              <div className="w-16 h-16 bg-red-100 rounded-full mx-auto flex items-center justify-center">
+                <XCircle className="w-8 h-8 text-red-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900">Analysis Failed</h2>
+              <p className="text-gray-600">{analysisError}</p>
+              <button
+                onClick={runAnalysis}
+                className="px-6 py-3 bg-amber-500 text-white rounded-xl hover:bg-amber-600 transition-colors"
+              >
+                Try Again
+              </button>
+            </div>
+          )
+        }
+
+        if (analysisComplete && analysisResult) {
+          return (
+            <div className="space-y-6">
+              {/* Report Header */}
+              <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl p-6 text-white">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-gray-400 text-sm">Investment Committee Report</p>
+                    <h1 className="text-2xl font-bold mt-1">{formData.month}</h1>
+                    <p className="text-amber-400 mt-2">{analysisResult.mode || 'Balanced'} Mode</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Summary */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                <h2 className="text-lg font-bold text-gray-900 mb-4">Executive Summary</h2>
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                  <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">
+                    {analysisResult.summary || 'Analysis complete. Review your recommendations below.'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Recommendations */}
+              {analysisResult.trades && analysisResult.trades.length > 0 && (
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                  <h3 className="font-bold text-gray-900 mb-3">Recommended Trades</h3>
+                  <div className="space-y-3">
+                    {analysisResult.trades.map((trade, i) => (
+                      <div key={i} className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-xl">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 bg-green-600 rounded-xl flex items-center justify-center text-white font-bold">
+                            {i + 1}
+                          </div>
+                          <div>
+                            <p className="font-bold text-gray-900">{trade.ticker}</p>
+                            <p className="text-sm text-gray-600">{trade.name}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-xl text-gray-900">£{trade.amount}</p>
+                          <p className="text-sm text-gray-500">{trade.rationale}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Full Analysis */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                <h3 className="font-bold text-gray-900 mb-3">Full Analysis</h3>
+                <div className="prose prose-sm max-w-none">
+                  <pre className="whitespace-pre-wrap text-sm text-gray-700 bg-gray-50 p-4 rounded-lg overflow-auto">
+                    {analysisResult.fullAnalysis || 'No detailed analysis available.'}
+                  </pre>
+                </div>
+              </div>
+
+              {/* Start Over */}
+              <div className="text-center">
+                <button
+                  onClick={() => {
+                    setStep(0)
+                    setAnalysisComplete(false)
+                    setAnalysisResult(null)
+                  }}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ← Start New Analysis
+                </button>
+              </div>
+            </div>
+          )
+        }
+
+        return (
+          <div className="text-center py-12 space-y-6">
+            <Brain className="w-16 h-16 text-amber-500 mx-auto" />
+            <h2 className="text-2xl font-bold text-gray-900">Ready to Run Analysis</h2>
+            <p className="text-gray-600 max-w-md mx-auto">
+              The Investment Committee will review your portfolio using the Five Pillars framework.
+            </p>
+            <button
+              onClick={runAnalysis}
+              className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium rounded-xl hover:from-amber-600 hover:to-orange-600 transition-colors shadow-lg"
+            >
+              Run Investment Committee
+            </button>
+          </div>
+        )
+
+      default:
+        return null
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-100 p-4">
+      <div className={`mx-auto ${analysisComplete ? 'max-w-4xl' : 'max-w-2xl'}`}>
+        {/* Progress Steps */}
+        {step > 0 && step < 5 && (
+          <div className="flex items-center justify-between mb-8">
+            {steps.slice(1, 5).map((s, i) => (
+              <React.Fragment key={s.title}>
+                <div className="flex flex-col items-center">
+                  <div
+                    className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                      i + 1 < step
+                        ? 'bg-green-500 text-white'
+                        : i + 1 === step
+                        ? 'bg-amber-500 text-white'
+                        : 'bg-gray-200 text-gray-500'
+                    }`}
+                  >
+                    {i + 1 < step ? <Check className="w-5 h-5" /> : <s.icon className="w-5 h-5" />}
+                  </div>
+                  <span className="text-xs mt-1 text-gray-500">{s.title}</span>
+                </div>
+                {i < 3 && (
+                  <div className={`flex-1 h-1 mx-2 rounded ${i + 1 < step ? 'bg-green-500' : 'bg-gray-200'}`} />
+                )}
+              </React.Fragment>
+            ))}
+          </div>
+        )}
+
+        {/* Main Card */}
+        <div className="bg-white rounded-2xl shadow-xl p-8">
+          {renderStep()}
+        </div>
+
+        {/* Navigation */}
+        {!isAnalyzing && !analysisComplete && (
+          <div className="flex justify-between mt-6">
+            {step > 0 ? (
+              <button
+                onClick={() => setStep(step - 1)}
+                className="flex items-center gap-2 px-6 py-3 text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                <ChevronLeft className="w-5 h-5" />
+                Back
+              </button>
+            ) : (
+              <div />
+            )}
+            {step < 5 && (
+              <button
+                onClick={() => setStep(step + 1)}
+                className="flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-colors"
+              >
+                {step === 0 ? 'Get Started' : step === 4 ? 'Run Analysis' : 'Continue'}
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Footer */}
+        <div className="text-center mt-8 text-sm text-gray-500">
+          <p>AI Investment Committee • Educational Tool Only • Not Financial Advice</p>
+        </div>
+      </div>
+    </div>
+  )
+}
