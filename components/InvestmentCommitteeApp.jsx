@@ -559,30 +559,7 @@ Marks & Spencer, MKS"
               <label className="block text-sm font-medium text-gray-700 mb-1">How do you feel about the markets this month?</label>
               <p className="text-xs text-gray-500 mb-3">This helps the committee calibrate its recommendations</p>
               
-              <div className="grid grid-cols-4 gap-2 mb-4">
-                {sentimentScenarios.map(scenario => {
-                  const isSelected = formData.marketSentiment === scenario.value
-                  return (
-                    <button
-                      key={scenario.id}
-                      onClick={() => setFormData({ ...formData, marketSentiment: scenario.value })}
-                      className={`p-3 rounded-xl border-2 text-center transition-all ${
-                        isSelected 
-                          ? 'border-amber-500 bg-amber-50' 
-                          : 'border-gray-200 hover:border-gray-300 bg-white'
-                      }`}
-                    >
-                      <scenario.icon className={`w-5 h-5 mx-auto mb-1 ${isSelected ? 'text-amber-600' : 'text-gray-400'}`} />
-                      <span className={`text-xs font-medium ${isSelected ? 'text-amber-700' : 'text-gray-600'}`}>
-                        {scenario.title}
-                      </span>
-                    </button>
-                  )
-                })}
-              </div>
-
               <div className="space-y-2">
-                <p className="text-xs text-gray-500">Fine-tune:</p>
                 <div
                   className="relative h-2 rounded-full bg-gradient-to-r from-red-500 via-amber-500 to-green-500 cursor-pointer"
                   onClick={(e) => {
@@ -1002,7 +979,7 @@ Marks & Spencer, MKS"
                 onClick={() => setStep(step + 1)}
                 className="flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-colors"
               >
-                {step === 0 ? 'Get Started' : step === 4 ? 'Run Analysis' : 'Continue'}
+                {step === 0 ? 'Get Started' : 'Continue'}
                 <ChevronRight className="w-5 h-5" />
               </button>
             )}
