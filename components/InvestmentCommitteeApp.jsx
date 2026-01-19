@@ -583,14 +583,21 @@ Marks & Spencer, MKS"
 
               <div className="space-y-2">
                 <p className="text-xs text-gray-500">Fine-tune:</p>
-                <input
-                  type="range"
-                  min="0"
-                  max="10"
-                  value={formData.marketSentiment}
-                  onChange={(e) => setFormData({ ...formData, marketSentiment: parseInt(e.target.value) })}
-                  className="w-full h-2 bg-gradient-to-r from-blue-400 via-amber-400 to-green-500 rounded-full appearance-none cursor-pointer"
-                />
+                <div
+                  className="relative h-2 rounded-full bg-gradient-to-r from-red-500 via-amber-500 to-green-500 cursor-pointer"
+                  onClick={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect()
+                    const x = e.clientX - rect.left
+                    const percentage = x / rect.width
+                    const value = Math.round(percentage * 10)
+                    setFormData({ ...formData, marketSentiment: Math.max(0, Math.min(10, value)) })
+                  }}
+                >
+                  <div
+                    className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-gray-400 rounded-full shadow cursor-grab"
+                    style={{ left: `calc(${(formData.marketSentiment / 10) * 100}% - 8px)` }}
+                  />
+                </div>
                 <div className="flex justify-between text-xs text-gray-400">
                   <span>Cautious</span>
                   <span>Balanced</span>
@@ -656,16 +663,23 @@ Marks & Spencer, MKS"
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Time Horizon (Years)</label>
-              <input
-                type="range"
-                min="1"
-                max="30"
-                value={formData.timeHorizon}
-                onChange={(e) => setFormData({ ...formData, timeHorizon: e.target.value })}
-                className="w-full accent-amber-500"
-              />
-              <div className="flex justify-between text-sm text-gray-500">
+              <label className="block text-sm font-medium text-gray-700 mb-3">Time Horizon (Years)</label>
+              <div
+                className="relative h-2 rounded-full bg-gray-300 cursor-pointer"
+                onClick={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect()
+                  const x = e.clientX - rect.left
+                  const percentage = x / rect.width
+                  const value = Math.round(1 + percentage * 29)
+                  setFormData({ ...formData, timeHorizon: String(Math.max(1, Math.min(30, value))) })
+                }}
+              >
+                <div
+                  className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-gray-400 rounded-full shadow cursor-grab"
+                  style={{ left: `calc(${((formData.timeHorizon - 1) / 29) * 100}% - 8px)` }}
+                />
+              </div>
+              <div className="flex justify-between text-sm text-gray-500 mt-2">
                 <span>1 year</span>
                 <span className="font-medium text-amber-600">{formData.timeHorizon} years</span>
                 <span>30 years</span>
