@@ -1,12 +1,12 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { 
-  Upload, FileText, TrendingUp, Shield, Brain, ChevronRight, ChevronLeft, 
-  Check, AlertCircle, Loader2, BarChart3, PieChart, BookOpen, Star, 
-  AlertTriangle, Download, Share2, ChevronDown, Target, Scale, Eye, 
-  Lightbulb, XCircle, TrendingDown, ArrowUpRight, ShieldAlert, Zap, 
-  Rocket, Globe, Newspaper, BarChart2 
+import {
+  Upload, FileText, TrendingUp, Shield, Brain, ChevronRight, ChevronLeft,
+  Check, AlertCircle, Loader2, BarChart3, PieChart, BookOpen, Star,
+  AlertTriangle, Download, Share2, ChevronDown, Target, Scale, Eye,
+  Lightbulb, XCircle, TrendingDown, ArrowUpRight, ShieldAlert, Zap,
+  Rocket, Globe, Newspaper, BarChart2, RefreshCw
 } from 'lucide-react'
 
 export default function InvestmentCommitteeApp() {
@@ -36,8 +36,6 @@ export default function InvestmentCommitteeApp() {
     buildGold: false,
   })
 
-  const [showUKSources, setShowUKSources] = useState(false)
-  const [showUSSources, setShowUSSources] = useState(false)
   const [holdingsFileName, setHoldingsFileName] = useState('')
   const [potentialsFileName, setPotentialsFileName] = useState('')
 
@@ -111,43 +109,33 @@ export default function InvestmentCommitteeApp() {
     return "Maximum deployment posture, accept higher risk"
   }
 
-  // Market Pulse Data - fetched from API on load
-  const [marketPulseData, setMarketPulseData] = useState({
-    uk: {
-      score: 5.5,
-      label: 'Loading...',
-      change: '0.0',
-      changeDirection: 'up',
-      lastUpdated: 'Loading...',
-      sources: []
-    },
-    us: {
-      score: 5.5,
-      label: 'Loading...',
-      change: '0.0',
-      changeDirection: 'up',
-      lastUpdated: 'Loading...',
-      sources: []
-    }
-  })
+  // Market Pulse Data - fetched from Yahoo Finance API
+  const [marketPulseData, setMarketPulseData] = useState(null)
   const [marketPulseLoading, setMarketPulseLoading] = useState(true)
+  const [marketPulseError, setMarketPulseError] = useState(null)
 
-  // Fetch market pulse data on component mount
-  useEffect(() => {
-    const fetchMarketPulse = async () => {
-      try {
-        const response = await fetch('/api/market-pulse')
-        if (response.ok) {
-          const data = await response.json()
-          setMarketPulseData(data)
-        }
-      } catch (error) {
-        console.error('Failed to fetch market pulse:', error)
-      } finally {
-        setMarketPulseLoading(false)
+  // Fetch market pulse data
+  const fetchMarketPulse = async () => {
+    setMarketPulseLoading(true)
+    setMarketPulseError(null)
+    try {
+      const response = await fetch('/api/market-pulse')
+      if (response.ok) {
+        const data = await response.json()
+        setMarketPulseData(data)
+      } else {
+        setMarketPulseError('Failed to fetch market data')
       }
+    } catch (error) {
+      console.error('Failed to fetch market pulse:', error)
+      setMarketPulseError('Failed to connect to market data')
+    } finally {
+      setMarketPulseLoading(false)
     }
+  }
 
+  // Fetch market pulse on component mount
+  useEffect(() => {
     fetchMarketPulse()
   }, [])
 
@@ -215,8 +203,20 @@ export default function InvestmentCommitteeApp() {
         body: JSON.stringify({
           formData,
           marketPulse: {
-            uk: { score: marketPulseData.uk.score, label: marketPulseData.uk.label },
-            us: { score: marketPulseData.us.score, label: marketPulseData.us.label }
+            uk: {
+              score: marketPulseData?.uk?.score || 5,
+              label: marketPulseData?.uk?.label || 'Neutral',
+              regime: marketPulseData?.uk?.regime || 'Unknown',
+              aboveMa50: marketPulseData?.uk?.aboveMa50,
+              aboveMa200: marketPulseData?.uk?.aboveMa200
+            },
+            us: {
+              score: marketPulseData?.us?.score || 5,
+              label: marketPulseData?.us?.label || 'Neutral',
+              regime: marketPulseData?.us?.regime || 'Unknown',
+              aboveMa50: marketPulseData?.us?.aboveMa50,
+              aboveMa200: marketPulseData?.us?.aboveMa200
+            }
           }
         })
       })
@@ -281,24 +281,39 @@ export default function InvestmentCommitteeApp() {
               </div>
             </div>
 
-            {/* Market Pulse Section - Full Version */}
+            {/* Market Pulse Section - Live Yahoo Finance Data */}
             <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 text-white">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center">
+                  <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center">
                     <BarChart2 className="w-6 h-6" />
                   </div>
                   <div>
                     <h2 className="font-bold text-lg">Market Pulse</h2>
-                    <p className="text-gray-400 text-sm">Live sentiment from 40 financial sources</p>
+                    <p className="text-gray-400 text-sm">Live data from Yahoo Finance</p>
                   </div>
                 </div>
-                <div className="text-xs text-gray-400">
-                  Updated {marketPulseData.uk.lastUpdated}
-                </div>
+                <button
+                  onClick={fetchMarketPulse}
+                  disabled={marketPulseLoading}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-sm transition-colors disabled:opacity-50"
+                >
+                  <RefreshCw className={`w-4 h-4 ${marketPulseLoading ? 'animate-spin' : ''}`} />
+                  {marketPulseLoading ? 'Loading...' : 'Refresh'}
+                </button>
               </div>
 
-              {/* Two Market Gauges */}
+              {marketPulseLoading && !marketPulseData ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-8 h-8 animate-spin text-blue-400" />
+                  <span className="ml-3 text-gray-400">Fetching live market data...</span>
+                </div>
+              ) : marketPulseError && !marketPulseData ? (
+                <div className="bg-red-500/20 rounded-xl p-4 text-center">
+                  <p className="text-red-300">{marketPulseError}</p>
+                  <button onClick={fetchMarketPulse} className="mt-2 text-sm underline">Try again</button>
+                </div>
+              ) : marketPulseData && (
               <div className="grid md:grid-cols-2 gap-4">
                 {/* UK Market */}
                 <div className="bg-white rounded-xl text-gray-900 overflow-hidden">
@@ -306,64 +321,52 @@ export default function InvestmentCommitteeApp() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="text-xl">🇬🇧</span>
-                        <span className="font-bold">UK Markets</span>
+                        <span className="font-bold">{marketPulseData.uk.index || 'FTSE 100'}</span>
                       </div>
-                      <div className={`flex items-center gap-1 text-sm ${marketPulseData.uk.changeDirection === 'up' ? 'text-green-600' : 'text-red-600'}`}>
-                        {marketPulseData.uk.changeDirection === 'up' ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
-                        {marketPulseData.uk.change}
-                      </div>
+                      <span className={`px-2 py-1 text-xs font-medium rounded ${
+                        marketPulseData.uk.regime === 'Trending Up' ? 'bg-green-100 text-green-700' :
+                        marketPulseData.uk.regime === 'Trending Down' ? 'bg-red-100 text-red-700' :
+                        marketPulseData.uk.regime === 'Volatile' ? 'bg-orange-100 text-orange-700' :
+                        'bg-amber-100 text-amber-700'
+                      }`}>
+                        {marketPulseData.uk.regime}
+                      </span>
                     </div>
+                    {marketPulseData.uk.price && (
+                      <p className="text-xs text-gray-500 mt-1">{marketPulseData.uk.price.toLocaleString()} pts</p>
+                    )}
                   </div>
                   <div className="p-4">
                     <div className="flex items-center justify-between mb-3">
                       <div>
                         <p className={`text-2xl font-bold ${getMarketSentimentColor(marketPulseData.uk.score).text}`}>
-                          {marketPulseData.uk.score.toFixed(1)}
+                          {marketPulseData.uk.score?.toFixed(1) || '—'}
                         </p>
-                        <p className="text-sm text-gray-500">{marketPulseData.uk.label}</p>
+                        <p className="text-xs text-gray-500">{marketPulseData.uk.label}</p>
                       </div>
-                      <div className={`px-3 py-1 rounded-full text-xs font-medium ${getMarketSentimentColor(marketPulseData.uk.score).light} ${getMarketSentimentColor(marketPulseData.uk.score).text}`}>
-                        {getMarketSentimentLabel(marketPulseData.uk.score)}
+                      <div className={`flex items-center gap-1 text-sm ${marketPulseData.uk.changeDirection === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+                        {marketPulseData.uk.changeDirection === 'up' ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                        {marketPulseData.uk.changePercent || marketPulseData.uk.change}
                       </div>
                     </div>
                     <div className="relative h-3 rounded-full overflow-hidden bg-gradient-to-r from-red-500 via-amber-500 to-green-500">
-                      <div 
+                      <div
                         className="absolute top-1/2 -translate-y-1/2 w-4 h-5 bg-white border-2 border-gray-800 rounded-sm shadow-lg"
-                        style={{ left: `calc(${(marketPulseData.uk.score / 10) * 100}% - 8px)` }}
+                        style={{ left: `calc(${((marketPulseData.uk.score || 5) / 10) * 100}% - 8px)` }}
                       />
                     </div>
                     <div className="flex justify-between mt-1 text-xs text-gray-400">
                       <span>Bearish</span>
-                      <span>Neutral</span>
                       <span>Bullish</span>
                     </div>
-                  </div>
-                  <div className="border-t border-gray-100">
-                    <button
-                      onClick={() => setShowUKSources(!showUKSources)}
-                      className="w-full px-4 py-2 flex items-center justify-between text-sm text-gray-600 hover:bg-gray-50 transition-colors"
-                    >
-                      <span className="flex items-center gap-2">
-                        <Newspaper className="w-4 h-4" />
-                        {marketPulseData.uk.sources.length} sources
-                      </span>
-                      <ChevronDown className={`w-4 h-4 transition-transform ${showUKSources ? 'rotate-180' : ''}`} />
-                    </button>
-                    {showUKSources && (
-                      <div className="px-4 pb-4 max-h-48 overflow-y-auto">
-                        <div className="space-y-1">
-                          {marketPulseData.uk.sources.map((source, i) => (
-                            <div key={i} className="flex items-center gap-2 p-2 rounded bg-gray-50 text-xs">
-                              <div className={`w-6 h-6 rounded flex items-center justify-center text-white font-bold ${getMarketSentimentColor(source.sentiment).bg}`}>
-                                {source.sentiment}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="font-medium truncate">{source.name}</p>
-                                <p className="text-gray-500 truncate">{source.headline}</p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
+                    {marketPulseData.uk.aboveMa50 !== null && (
+                      <div className="flex gap-2 mt-3 text-xs">
+                        <span className={`px-2 py-0.5 rounded ${marketPulseData.uk.aboveMa50 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                          {marketPulseData.uk.aboveMa50 ? '↑' : '↓'} 50MA
+                        </span>
+                        <span className={`px-2 py-0.5 rounded ${marketPulseData.uk.aboveMa200 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                          {marketPulseData.uk.aboveMa200 ? '↑' : '↓'} 200MA
+                        </span>
                       </div>
                     )}
                   </div>
@@ -375,69 +378,58 @@ export default function InvestmentCommitteeApp() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="text-xl">🇺🇸</span>
-                        <span className="font-bold">US Markets</span>
+                        <span className="font-bold">{marketPulseData.us.index || 'S&P 500'}</span>
                       </div>
-                      <div className={`flex items-center gap-1 text-sm ${marketPulseData.us.changeDirection === 'up' ? 'text-green-600' : 'text-red-600'}`}>
-                        {marketPulseData.us.changeDirection === 'up' ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
-                        {marketPulseData.us.change}
-                      </div>
+                      <span className={`px-2 py-1 text-xs font-medium rounded ${
+                        marketPulseData.us.regime === 'Trending Up' ? 'bg-green-100 text-green-700' :
+                        marketPulseData.us.regime === 'Trending Down' ? 'bg-red-100 text-red-700' :
+                        marketPulseData.us.regime === 'Volatile' ? 'bg-orange-100 text-orange-700' :
+                        'bg-amber-100 text-amber-700'
+                      }`}>
+                        {marketPulseData.us.regime}
+                      </span>
                     </div>
+                    {marketPulseData.us.price && (
+                      <p className="text-xs text-gray-500 mt-1">{marketPulseData.us.price.toLocaleString()} pts</p>
+                    )}
                   </div>
                   <div className="p-4">
                     <div className="flex items-center justify-between mb-3">
                       <div>
                         <p className={`text-2xl font-bold ${getMarketSentimentColor(marketPulseData.us.score).text}`}>
-                          {marketPulseData.us.score.toFixed(1)}
+                          {marketPulseData.us.score?.toFixed(1) || '—'}
                         </p>
-                        <p className="text-sm text-gray-500">{marketPulseData.us.label}</p>
+                        <p className="text-xs text-gray-500">{marketPulseData.us.label}</p>
                       </div>
-                      <div className={`px-3 py-1 rounded-full text-xs font-medium ${getMarketSentimentColor(marketPulseData.us.score).light} ${getMarketSentimentColor(marketPulseData.us.score).text}`}>
-                        {getMarketSentimentLabel(marketPulseData.us.score)}
+                      <div className={`flex items-center gap-1 text-sm ${marketPulseData.us.changeDirection === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+                        {marketPulseData.us.changeDirection === 'up' ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                        {marketPulseData.us.changePercent || marketPulseData.us.change}
                       </div>
                     </div>
                     <div className="relative h-3 rounded-full overflow-hidden bg-gradient-to-r from-red-500 via-amber-500 to-green-500">
-                      <div 
+                      <div
                         className="absolute top-1/2 -translate-y-1/2 w-4 h-5 bg-white border-2 border-gray-800 rounded-sm shadow-lg"
-                        style={{ left: `calc(${(marketPulseData.us.score / 10) * 100}% - 8px)` }}
+                        style={{ left: `calc(${((marketPulseData.us.score || 5) / 10) * 100}% - 8px)` }}
                       />
                     </div>
                     <div className="flex justify-between mt-1 text-xs text-gray-400">
                       <span>Bearish</span>
-                      <span>Neutral</span>
                       <span>Bullish</span>
                     </div>
-                  </div>
-                  <div className="border-t border-gray-100">
-                    <button
-                      onClick={() => setShowUSSources(!showUSSources)}
-                      className="w-full px-4 py-2 flex items-center justify-between text-sm text-gray-600 hover:bg-gray-50 transition-colors"
-                    >
-                      <span className="flex items-center gap-2">
-                        <Newspaper className="w-4 h-4" />
-                        {marketPulseData.us.sources.length} sources
-                      </span>
-                      <ChevronDown className={`w-4 h-4 transition-transform ${showUSSources ? 'rotate-180' : ''}`} />
-                    </button>
-                    {showUSSources && (
-                      <div className="px-4 pb-4 max-h-48 overflow-y-auto">
-                        <div className="space-y-1">
-                          {marketPulseData.us.sources.map((source, i) => (
-                            <div key={i} className="flex items-center gap-2 p-2 rounded bg-gray-50 text-xs">
-                              <div className={`w-6 h-6 rounded flex items-center justify-center text-white font-bold ${getMarketSentimentColor(source.sentiment).bg}`}>
-                                {source.sentiment}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="font-medium truncate">{source.name}</p>
-                                <p className="text-gray-500 truncate">{source.headline}</p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
+                    {marketPulseData.us.aboveMa50 !== null && (
+                      <div className="flex gap-2 mt-3 text-xs">
+                        <span className={`px-2 py-0.5 rounded ${marketPulseData.us.aboveMa50 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                          {marketPulseData.us.aboveMa50 ? '↑' : '↓'} 50MA
+                        </span>
+                        <span className={`px-2 py-0.5 rounded ${marketPulseData.us.aboveMa200 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                          {marketPulseData.us.aboveMa200 ? '↑' : '↓'} 200MA
+                        </span>
                       </div>
                     )}
                   </div>
                 </div>
               </div>
+              )}
             </div>
 
             {/* Disclaimer */}
@@ -593,41 +585,43 @@ Marks & Spencer, MKS"
             </div>
 
             {/* Compact Inline Market Pulse */}
+            {marketPulseData && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-3">Current Market Sentiment</label>
               <div className="flex gap-3 mb-6">
                 <div className="flex-1 bg-gray-50 rounded-lg p-3 border border-gray-200">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium">🇬🇧 UK</span>
+                    <span className="text-sm font-medium">🇬🇧 {marketPulseData.uk.index || 'FTSE'}</span>
                     <span className={`text-lg font-bold ${getMarketSentimentColor(marketPulseData.uk.score).text}`}>
-                      {marketPulseData.uk.score.toFixed(1)}
+                      {marketPulseData.uk.score?.toFixed(1) || '—'}
                     </span>
                   </div>
                   <div className="h-2 rounded-full bg-gradient-to-r from-red-500 via-amber-500 to-green-500 relative">
-                    <div 
+                    <div
                       className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white border-2 border-gray-700 rounded-full"
-                      style={{ left: `calc(${(marketPulseData.uk.score / 10) * 100}% - 6px)` }}
+                      style={{ left: `calc(${((marketPulseData.uk.score || 5) / 10) * 100}% - 6px)` }}
                     />
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">{getMarketSentimentLabel(marketPulseData.uk.score)}</p>
+                  <p className="text-xs text-gray-500 mt-1">{marketPulseData.uk.label}</p>
                 </div>
                 <div className="flex-1 bg-gray-50 rounded-lg p-3 border border-gray-200">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium">🇺🇸 US</span>
+                    <span className="text-sm font-medium">🇺🇸 {marketPulseData.us.index || 'S&P'}</span>
                     <span className={`text-lg font-bold ${getMarketSentimentColor(marketPulseData.us.score).text}`}>
-                      {marketPulseData.us.score.toFixed(1)}
+                      {marketPulseData.us.score?.toFixed(1) || '—'}
                     </span>
                   </div>
                   <div className="h-2 rounded-full bg-gradient-to-r from-red-500 via-amber-500 to-green-500 relative">
-                    <div 
+                    <div
                       className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white border-2 border-gray-700 rounded-full"
-                      style={{ left: `calc(${(marketPulseData.us.score / 10) * 100}% - 6px)` }}
+                      style={{ left: `calc(${((marketPulseData.us.score || 5) / 10) * 100}% - 6px)` }}
                     />
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">{getMarketSentimentLabel(marketPulseData.us.score)}</p>
+                  <p className="text-xs text-gray-500 mt-1">{marketPulseData.us.label}</p>
                 </div>
               </div>
             </div>
+            )}
 
             {/* User Sentiment Input */}
             <div>

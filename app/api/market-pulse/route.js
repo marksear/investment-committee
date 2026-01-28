@@ -1,183 +1,243 @@
-// Market Pulse API - Generates sentiment scores from financial source analysis
-// In production, this would fetch real data from financial news APIs
+// Market Pulse API - Live data from Yahoo Finance
+// Shared approach with swing-committee for unified market view
 
 export async function GET() {
   try {
-    const marketPulse = generateMarketPulse()
-    return Response.json(marketPulse)
+    // Fetch UK and US market data in parallel
+    const [ukData, usData] = await Promise.all([
+      fetchMarketData('^FTSE', 'UK'),
+      fetchMarketData('^GSPC', 'US')
+    ])
+
+    return Response.json({
+      uk: ukData,
+      us: usData,
+      timestamp: new Date().toISOString()
+    })
   } catch (error) {
     console.error('Market pulse error:', error)
     return Response.json(
-      { error: 'Failed to fetch market pulse' },
+      { error: 'Failed to fetch market data', details: error.message },
       { status: 500 }
     )
   }
 }
 
-function generateMarketPulse() {
-  // UK Sources - Financial publications and platforms
-  const ukSources = [
-    { name: 'Financial Times', baseScore: 6 },
-    { name: 'The Times', baseScore: 5 },
-    { name: 'The Guardian', baseScore: 4 },
-    { name: 'Telegraph', baseScore: 6 },
-    { name: 'BBC Business', baseScore: 5 },
-    { name: 'Sky News Business', baseScore: 6 },
-    { name: 'Reuters UK', baseScore: 6 },
-    { name: 'Bloomberg UK', baseScore: 7 },
-    { name: 'Investors Chronicle', baseScore: 5 },
-    { name: 'Shares Magazine', baseScore: 6 },
-    { name: 'This Is Money', baseScore: 5 },
-    { name: 'MoneyWeek', baseScore: 7 },
-    { name: 'AJ Bell', baseScore: 6 },
-    { name: 'Hargreaves Lansdown', baseScore: 6 },
-    { name: 'Interactive Investor', baseScore: 5 },
-    { name: 'Citywire', baseScore: 6 },
-    { name: 'Trustnet', baseScore: 5 },
-    { name: 'Morningstar UK', baseScore: 6 },
-    { name: 'CNBC Europe', baseScore: 6 },
-    { name: 'MarketWatch UK', baseScore: 5 },
-  ]
+async function fetchMarketData(symbol, market) {
+  try {
+    // Fetch current price and chart data for regime analysis
+    // Use 1 year to ensure we have enough data for 200-day MA
+    const [quoteData, chartData] = await Promise.all([
+      fetchYahooQuote(symbol),
+      fetchYahooChart(symbol, '1y')
+    ])
 
-  // US Sources - Financial publications and platforms
-  const usSources = [
-    { name: 'Wall Street Journal', baseScore: 7 },
-    { name: 'New York Times', baseScore: 6 },
-    { name: 'Bloomberg', baseScore: 8 },
-    { name: 'CNBC', baseScore: 7 },
-    { name: 'Reuters', baseScore: 7 },
-    { name: 'MarketWatch', baseScore: 7 },
-    { name: 'Barrons', baseScore: 8 },
-    { name: 'Forbes', baseScore: 7 },
-    { name: 'Financial Times US', baseScore: 6 },
-    { name: 'Yahoo Finance', baseScore: 7 },
-    { name: 'Investors Business Daily', baseScore: 8 },
-    { name: 'Seeking Alpha', baseScore: 7 },
-    { name: 'Motley Fool', baseScore: 7 },
-    { name: 'Kiplinger', baseScore: 6 },
-    { name: 'CNN Business', baseScore: 7 },
-    { name: 'Fox Business', baseScore: 8 },
-    { name: 'The Street', baseScore: 7 },
-    { name: 'Benzinga', baseScore: 8 },
-    { name: 'Zacks', baseScore: 7 },
-    { name: 'Morningstar US', baseScore: 6 },
-  ]
+    if (!quoteData || !chartData) {
+      return getDefaultMarketData(market)
+    }
 
-  // Headlines that vary based on sentiment
-  const ukHeadlines = {
-    bullish: [
-      'FTSE 100 rallies on rate cut optimism',
-      'UK stocks attract foreign investment',
-      'Sterling strengthens amid positive data',
-      'London market outperforms expectations',
-      'British equities show resilience',
-    ],
-    neutral: [
-      'FTSE 100 holds gains amid uncertainty',
-      'UK economy shows mixed signals',
-      'Markets await BoE decision',
-      'Investors cautious on UK outlook',
-      'FTSE treads water in quiet session',
-    ],
-    bearish: [
-      'FTSE 100 slips on growth concerns',
-      'UK stocks face headwinds',
-      'Sterling weakness weighs on markets',
-      'Recession fears hit UK equities',
-      'London market underperforms peers',
-    ],
+    // Calculate technical indicators
+    const prices = chartData.prices || []
+    const ma50 = calculateMA(prices, 50)
+    const ma200 = calculateMA(prices, 200)
+    const currentPrice = quoteData.price
+    const previousClose = quoteData.previousClose
+    const change = currentPrice - previousClose
+    const changePercent = ((change / previousClose) * 100).toFixed(2)
+
+    // Determine regime based on price vs MAs and trend
+    const regime = determineRegime(currentPrice, ma50, ma200, prices)
+
+    // Calculate sentiment score (1-10)
+    const score = calculateSentimentScore(currentPrice, ma50, ma200, changePercent, prices)
+
+    // Generate label based on score
+    const label = getSentimentLabel(score)
+
+    return {
+      index: market === 'UK' ? 'FTSE 100' : 'S&P 500',
+      price: currentPrice,
+      change: change.toFixed(2),
+      changePercent: `${changePercent}%`,
+      changeDirection: change >= 0 ? 'up' : 'down',
+      ma50,
+      ma200,
+      score,
+      label,
+      regime,
+      aboveMa50: ma50 ? currentPrice > ma50 : null,
+      aboveMa200: ma200 ? currentPrice > ma200 : null,
+      marketState: quoteData.marketState
+    }
+  } catch (error) {
+    console.error(`Error fetching ${market} data:`, error)
+    return getDefaultMarketData(market)
   }
+}
 
-  const usHeadlines = {
-    bullish: [
-      'S&P 500 eyes new record highs',
-      'Tech rally drives market gains',
-      'Bull market extends into new territory',
-      'Wall Street optimism at multi-year high',
-      'AI boom fuels equity rally',
-    ],
-    neutral: [
-      'Markets mixed ahead of Fed decision',
-      'S&P 500 consolidates recent gains',
-      'Investors weigh growth vs inflation',
-      'Wall Street awaits earnings clarity',
-      'US stocks tread carefully',
-    ],
-    bearish: [
-      'S&P 500 retreats on rate concerns',
-      'Tech selloff weighs on markets',
-      'Valuation concerns hit Wall Street',
-      'US stocks face correction fears',
-      'Market breadth narrows sharply',
-    ],
-  }
+async function fetchYahooQuote(symbol) {
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`
 
-  // Generate scores with slight randomness around base
-  const generateSourceData = (sources, headlines) => {
-    return sources.map(source => {
-      // Add randomness: -2 to +2 from base score, clamped to 1-10
-      const variance = Math.floor(Math.random() * 5) - 2
-      const sentiment = Math.max(1, Math.min(10, source.baseScore + variance))
+  const response = await fetch(url, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+    }
+  })
 
-      // Select headline based on sentiment
-      let headlineSet
-      if (sentiment >= 7) headlineSet = headlines.bullish
-      else if (sentiment >= 4) headlineSet = headlines.neutral
-      else headlineSet = headlines.bearish
+  if (!response.ok) return null
 
-      const headline = headlineSet[Math.floor(Math.random() * headlineSet.length)]
-
-      return {
-        name: source.name,
-        sentiment,
-        headline,
-      }
-    })
-  }
-
-  const ukSourceData = generateSourceData(ukSources, ukHeadlines)
-  const usSourceData = generateSourceData(usSources, usHeadlines)
-
-  // Calculate average scores
-  const ukScore = ukSourceData.reduce((sum, s) => sum + s.sentiment, 0) / ukSourceData.length
-  const usScore = usSourceData.reduce((sum, s) => sum + s.sentiment, 0) / usSourceData.length
-
-  // Generate change values (simulating daily movement)
-  const ukChange = (Math.random() * 1.2 - 0.4).toFixed(1)
-  const usChange = (Math.random() * 1.2 - 0.4).toFixed(1)
-
-  // Determine labels based on score
-  const getLabel = (score) => {
-    if (score <= 2) return 'Very Bearish'
-    if (score <= 3.5) return 'Bearish'
-    if (score <= 4.5) return 'Slightly Bearish'
-    if (score <= 5.5) return 'Neutral'
-    if (score <= 6.5) return 'Cautiously Optimistic'
-    if (score <= 8) return 'Bullish'
-    return 'Very Bullish'
-  }
-
-  // Format timestamp
-  const now = new Date()
-  const hours = now.getHours()
-  const lastUpdated = hours < 12 ? 'This morning' : hours < 17 ? 'This afternoon' : 'This evening'
+  const data = await response.json()
+  const result = data.chart?.result?.[0]
+  if (!result) return null
 
   return {
-    uk: {
-      score: Math.round(ukScore * 10) / 10,
-      label: getLabel(ukScore),
-      change: (parseFloat(ukChange) >= 0 ? '+' : '') + ukChange,
-      changeDirection: parseFloat(ukChange) >= 0 ? 'up' : 'down',
-      lastUpdated,
-      sources: ukSourceData,
-    },
-    us: {
-      score: Math.round(usScore * 10) / 10,
-      label: getLabel(usScore),
-      change: (parseFloat(usChange) >= 0 ? '+' : '') + usChange,
-      changeDirection: parseFloat(usChange) >= 0 ? 'up' : 'down',
-      lastUpdated,
-      sources: usSourceData,
-    },
+    price: result.meta.regularMarketPrice,
+    previousClose: result.meta.previousClose || result.meta.chartPreviousClose,
+    marketState: result.meta.marketState
+  }
+}
+
+async function fetchYahooChart(symbol, range) {
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=${range}`
+
+  const response = await fetch(url, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+    }
+  })
+
+  if (!response.ok) return null
+
+  const data = await response.json()
+  const result = data.chart?.result?.[0]
+  if (!result) return null
+
+  const closes = result.indicators?.quote?.[0]?.close || []
+  return {
+    prices: closes.filter(p => p !== null)
+  }
+}
+
+function calculateMA(prices, period) {
+  if (prices.length < period) return null
+  const relevantPrices = prices.slice(-period)
+  const sum = relevantPrices.reduce((a, b) => a + b, 0)
+  return sum / period
+}
+
+function determineRegime(price, ma50, ma200, prices) {
+  if (prices.length < 20) {
+    return 'Unknown'
+  }
+
+  // Calculate recent volatility (standard deviation of last 20 days)
+  const recentPrices = prices.slice(-20)
+  const avgPrice = recentPrices.reduce((a, b) => a + b, 0) / recentPrices.length
+  const variance = recentPrices.reduce((sum, p) => sum + Math.pow(p - avgPrice, 2), 0) / recentPrices.length
+  const volatility = Math.sqrt(variance) / avgPrice * 100
+
+  // Check trend direction (compare current price to 20 days ago)
+  const priceChange20d = ((price - prices[prices.length - 20]) / prices[prices.length - 20]) * 100
+
+  // High volatility regime
+  if (volatility > 2) {
+    return 'Volatile'
+  }
+
+  // If we have MA data, use it for more nuanced analysis
+  if (ma50 && ma200) {
+    if (price > ma50 && ma50 > ma200 && priceChange20d > 2) {
+      return 'Trending Up'
+    }
+    if (price < ma50 && ma50 < ma200 && priceChange20d < -2) {
+      return 'Trending Down'
+    }
+    if (price > ma50 && price > ma200) {
+      return 'Trending Up'
+    }
+    if (price < ma50 && price < ma200) {
+      return 'Trending Down'
+    }
+  } else if (ma50) {
+    if (price > ma50 && priceChange20d > 2) {
+      return 'Trending Up'
+    }
+    if (price < ma50 && priceChange20d < -2) {
+      return 'Trending Down'
+    }
+  } else {
+    if (priceChange20d > 3) {
+      return 'Trending Up'
+    }
+    if (priceChange20d < -3) {
+      return 'Trending Down'
+    }
+  }
+
+  return 'Choppy'
+}
+
+function calculateSentimentScore(price, ma50, ma200, changePercent, prices) {
+  let score = 5 // Start neutral
+
+  // Price vs MA50 (+/- 1.5 points)
+  if (ma50) {
+    const distanceFromMa50 = ((price - ma50) / ma50) * 100
+    score += Math.min(1.5, Math.max(-1.5, distanceFromMa50 / 3))
+  }
+
+  // Price vs MA200 (+/- 1 point)
+  if (ma200) {
+    const distanceFromMa200 = ((price - ma200) / ma200) * 100
+    score += Math.min(1, Math.max(-1, distanceFromMa200 / 5))
+  }
+
+  // MA50 vs MA200 (+/- 1 point)
+  if (ma50 && ma200) {
+    if (ma50 > ma200) score += 1
+    else if (ma50 < ma200) score -= 1
+  }
+
+  // Today's change (+/- 1 point)
+  const change = parseFloat(changePercent)
+  score += Math.min(1, Math.max(-1, change / 1.5))
+
+  // Recent momentum - last 5 days trend (+/- 0.5 points)
+  if (prices.length >= 5) {
+    const fiveDayChange = ((price - prices[prices.length - 5]) / prices[prices.length - 5]) * 100
+    score += Math.min(0.5, Math.max(-0.5, fiveDayChange / 3))
+  }
+
+  // Clamp to 1-10 range
+  return Math.min(10, Math.max(1, Math.round(score * 10) / 10))
+}
+
+function getSentimentLabel(score) {
+  if (score <= 2) return 'Very Bearish'
+  if (score <= 3.5) return 'Bearish'
+  if (score <= 4.5) return 'Cautious'
+  if (score <= 5.5) return 'Neutral'
+  if (score <= 6.5) return 'Cautiously Optimistic'
+  if (score <= 7.5) return 'Bullish'
+  if (score <= 8.5) return 'Very Bullish'
+  return 'Extremely Bullish'
+}
+
+function getDefaultMarketData(market) {
+  return {
+    index: market === 'UK' ? 'FTSE 100' : 'S&P 500',
+    price: null,
+    change: '0.00',
+    changePercent: '0.00%',
+    changeDirection: 'up',
+    ma50: null,
+    ma200: null,
+    score: 5,
+    label: 'Data Unavailable',
+    regime: 'Unknown',
+    aboveMa50: null,
+    aboveMa200: null,
+    marketState: 'CLOSED',
+    error: true
   }
 }
