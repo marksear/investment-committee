@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { 
   Upload, FileText, TrendingUp, Shield, Brain, ChevronRight, ChevronLeft, 
   Check, AlertCircle, Loader2, BarChart3, PieChart, BookOpen, Star, 
@@ -111,67 +111,45 @@ export default function InvestmentCommitteeApp() {
     return "Maximum deployment posture, accept higher risk"
   }
 
-  // Market Pulse Data (in production, this would come from API/cache)
-  const marketPulseData = {
+  // Market Pulse Data - fetched from API on load
+  const [marketPulseData, setMarketPulseData] = useState({
     uk: {
-      score: 5.8,
-      label: 'Cautiously Optimistic',
-      change: '+0.3',
+      score: 5.5,
+      label: 'Loading...',
+      change: '0.0',
       changeDirection: 'up',
-      lastUpdated: '2 hours ago',
-      sources: [
-        { name: 'Financial Times', sentiment: 6, headline: 'FTSE 100 holds gains amid rate cut hopes' },
-        { name: 'The Times', sentiment: 5, headline: 'UK economy shows resilience despite headwinds' },
-        { name: 'The Guardian', sentiment: 4, headline: 'Inflation concerns persist as BoE meets' },
-        { name: 'Telegraph', sentiment: 6, headline: 'Sterling strengthens on positive data' },
-        { name: 'BBC Business', sentiment: 5, headline: 'Mixed signals from retail sector' },
-        { name: 'Sky News Business', sentiment: 6, headline: 'House prices edge higher in January' },
-        { name: 'Reuters UK', sentiment: 6, headline: 'UK stocks attractive to foreign buyers' },
-        { name: 'Bloomberg UK', sentiment: 7, headline: 'London remains top financial hub' },
-        { name: 'Investors Chronicle', sentiment: 5, headline: 'Value opportunities in mid-caps' },
-        { name: 'Shares Magazine', sentiment: 6, headline: 'Dividend stocks back in favour' },
-        { name: 'This Is Money', sentiment: 5, headline: 'Savers face rate cut reality' },
-        { name: 'MoneyWeek', sentiment: 7, headline: 'Contrarian case for UK equities' },
-        { name: 'AJ Bell', sentiment: 6, headline: 'ISA season outlook positive' },
-        { name: 'Hargreaves Lansdown', sentiment: 6, headline: 'FTSE 100 valuations attractive' },
-        { name: 'Interactive Investor', sentiment: 5, headline: 'Defensive positioning advised' },
-        { name: 'Citywire', sentiment: 6, headline: 'Fund managers turn bullish on UK' },
-        { name: 'Trustnet', sentiment: 5, headline: 'Bond funds see inflows' },
-        { name: 'Morningstar UK', sentiment: 6, headline: 'Undervalued opportunities remain' },
-        { name: 'CNBC Europe', sentiment: 6, headline: 'European markets rally continues' },
-        { name: 'MarketWatch UK', sentiment: 5, headline: 'Caution ahead of earnings season' },
-      ]
+      lastUpdated: 'Loading...',
+      sources: []
     },
     us: {
-      score: 7.2,
-      label: 'Bullish',
-      change: '+0.5',
+      score: 5.5,
+      label: 'Loading...',
+      change: '0.0',
       changeDirection: 'up',
-      lastUpdated: '2 hours ago',
-      sources: [
-        { name: 'Wall Street Journal', sentiment: 7, headline: 'S&P 500 eyes new record highs' },
-        { name: 'New York Times', sentiment: 6, headline: 'Tech rally shows no signs of slowing' },
-        { name: 'Bloomberg', sentiment: 8, headline: 'Bull market enters third year' },
-        { name: 'CNBC', sentiment: 7, headline: 'Earnings season off to strong start' },
-        { name: 'Reuters', sentiment: 7, headline: 'Fed signals patience on rates' },
-        { name: 'MarketWatch', sentiment: 7, headline: 'Investor sentiment hits 2-year high' },
-        { name: 'Barrons', sentiment: 8, headline: 'Why stocks can keep climbing' },
-        { name: 'Forbes', sentiment: 7, headline: 'AI boom drives market gains' },
-        { name: 'Financial Times US', sentiment: 6, headline: 'Valuations stretched but supported' },
-        { name: 'Yahoo Finance', sentiment: 7, headline: 'Retail investors pile back in' },
-        { name: 'Investors Business Daily', sentiment: 8, headline: 'Market in confirmed uptrend' },
-        { name: 'Seeking Alpha', sentiment: 7, headline: 'Growth stocks lead advance' },
-        { name: 'Motley Fool', sentiment: 7, headline: 'Time in market beats timing' },
-        { name: 'Kiplinger', sentiment: 6, headline: 'Diversification still matters' },
-        { name: 'CNN Business', sentiment: 7, headline: 'Consumer spending remains strong' },
-        { name: 'Fox Business', sentiment: 8, headline: 'Economic data beats expectations' },
-        { name: 'The Street', sentiment: 7, headline: 'Momentum favours buyers' },
-        { name: 'Benzinga', sentiment: 8, headline: 'Options flow signals confidence' },
-        { name: 'Zacks', sentiment: 7, headline: 'Earnings revisions trending up' },
-        { name: 'Morningstar US', sentiment: 6, headline: 'Some sectors look overvalued' },
-      ]
+      lastUpdated: 'Loading...',
+      sources: []
     }
-  }
+  })
+  const [marketPulseLoading, setMarketPulseLoading] = useState(true)
+
+  // Fetch market pulse data on component mount
+  useEffect(() => {
+    const fetchMarketPulse = async () => {
+      try {
+        const response = await fetch('/api/market-pulse')
+        if (response.ok) {
+          const data = await response.json()
+          setMarketPulseData(data)
+        }
+      } catch (error) {
+        console.error('Failed to fetch market pulse:', error)
+      } finally {
+        setMarketPulseLoading(false)
+      }
+    }
+
+    fetchMarketPulse()
+  }, [])
 
   const getMarketSentimentColor = (score) => {
     if (score <= 3) return { text: 'text-red-600', bg: 'bg-red-500', light: 'bg-red-100' }
