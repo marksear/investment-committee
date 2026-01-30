@@ -265,7 +265,7 @@ export default function InvestmentCommitteeApp() {
               <div className="w-20 h-20 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl mx-auto flex items-center justify-center shadow-lg">
                 <TrendingUp className="w-10 h-10 text-white" />
               </div>
-              <h1 className="text-3xl font-bold text-gray-900">AI Investment Committee</h1>
+              <h1 className="text-3xl font-bold text-gray-900">The Investment Program</h1>
               <p className="text-gray-600 max-w-md mx-auto">
                 Make disciplined investment decisions using the wisdom of Graham, Buffett, Munger, Marks & Lynch.
               </p>
@@ -852,7 +852,7 @@ Marks & Spencer, MKS"
                 <div className="absolute inset-0 border-4 border-amber-500 rounded-full border-t-transparent animate-spin"></div>
                 <Brain className="absolute inset-0 m-auto w-8 h-8 text-amber-600" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900">Investment Committee in Session</h2>
+              <h2 className="text-2xl font-bold text-gray-900">Analysis in Progress</h2>
               
               <div className="max-w-md mx-auto text-left bg-gray-50 rounded-xl p-4">
                 <div className="space-y-2">
@@ -903,7 +903,7 @@ Marks & Spencer, MKS"
               <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl p-6 text-white">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="text-gray-400 text-sm">Investment Committee Report</p>
+                    <p className="text-gray-400 text-sm">The Investment Program Report</p>
                     <h1 className="text-2xl font-bold mt-1">{formData.month}</h1>
                     <p className="text-amber-400 mt-2">{analysisResult.mode || 'Balanced'} Mode</p>
                   </div>
@@ -978,13 +978,13 @@ Marks & Spencer, MKS"
             <Brain className="w-16 h-16 text-amber-500 mx-auto" />
             <h2 className="text-2xl font-bold text-gray-900">Ready to Run Analysis</h2>
             <p className="text-gray-600 max-w-md mx-auto">
-              The Investment Committee will review your portfolio using the Five Pillars framework.
+              The Investment Program will review your portfolio using the Five Pillars framework.
             </p>
             <button
               onClick={runAnalysis}
               className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium rounded-xl hover:from-amber-600 hover:to-orange-600 transition-colors shadow-lg"
             >
-              Run Investment Committee
+              Run Analysis
             </button>
           </div>
         )
@@ -1057,7 +1057,7 @@ Marks & Spencer, MKS"
 
         {/* Footer */}
         <div className="text-center mt-8 text-sm text-gray-500">
-          <p>AI Investment Committee • Educational Tool Only • Not Financial Advice</p>
+          <p>The Investment Program • Educational Tool Only • Not Financial Advice</p>
         </div>
       </div>
     </div>
