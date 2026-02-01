@@ -1154,18 +1154,16 @@ Marks & Spencer, MKS"
           )
         }
 
+        // Fallback - analysis should auto-start when reaching step 5
         return (
           <div className="text-center py-12 space-y-6">
             <Brain className="w-16 h-16 text-amber-500 mx-auto" />
-            <h2 className="text-2xl font-bold text-gray-900">Ready to Run Analysis</h2>
-            <p className="text-gray-600 max-w-md mx-auto">
-              The Investment Program will review your portfolio using the Five Pillars framework.
-            </p>
+            <p className="text-gray-600">Starting analysis...</p>
             <button
               onClick={runAnalysis}
-              className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium rounded-xl hover:from-amber-600 hover:to-orange-600 transition-colors shadow-lg"
+              className="px-6 py-3 bg-amber-500 text-white font-medium rounded-xl hover:bg-amber-600 transition-colors"
             >
-              Run Analysis
+              Start Analysis
             </button>
           </div>
         )
@@ -1226,10 +1224,18 @@ Marks & Spencer, MKS"
             )}
             {step < 5 && (
               <button
-                onClick={() => setStep(step + 1)}
+                onClick={() => {
+                  if (step === 4) {
+                    // Skip the "Ready to Run" screen - go directly to step 5 and start analysis
+                    setStep(5)
+                    runAnalysis()
+                  } else {
+                    setStep(step + 1)
+                  }
+                }}
                 className="flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-colors"
               >
-                {step === 0 ? 'Get Started' : 'Continue'}
+                {step === 0 ? 'Get Started' : step === 4 ? 'Run Analysis' : 'Continue'}
                 <ChevronRight className="w-5 h-5" />
               </button>
             )}
