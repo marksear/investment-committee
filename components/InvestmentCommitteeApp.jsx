@@ -1070,11 +1070,14 @@ Marks & Spencer, MKS"
                                 {trade.rationale && (
                                   <div className="mt-3 pt-3 border-t border-gray-200">
                                     <p className="text-xs text-gray-500 uppercase mb-2">Investment Rationale</p>
-                                    <div className="bg-white p-4 rounded-lg space-y-2">
-                                      {trade.rationale.split(/[.!?](?:\s|$)/).filter(s => s.trim()).map((sentence, idx) => (
-                                        <div key={idx} className="flex items-start gap-2">
-                                          <span className="text-amber-500 mt-0.5">•</span>
-                                          <p className="text-sm text-gray-700">{sentence.trim()}</p>
+                                    <div className="bg-white p-4 rounded-lg space-y-3">
+                                      {(Array.isArray(trade.rationale)
+                                        ? trade.rationale
+                                        : trade.rationale.split(/[.!?](?:\s|$)/).filter(s => s.trim())
+                                      ).map((point, idx) => (
+                                        <div key={idx} className="flex items-start gap-3">
+                                          <span className="text-amber-500 mt-0.5 text-lg leading-none">•</span>
+                                          <p className="text-sm text-gray-700 leading-relaxed">{typeof point === 'string' ? point.trim() : point}</p>
                                         </div>
                                       ))}
                                     </div>

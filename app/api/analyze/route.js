@@ -336,7 +336,12 @@ For each potential stock, provide:
       "action": "BUY",
       "category": "CORE",
       "wrapper": "ISA",
-      "rationale": "Global diversification with low cost. Meets Buffett quality criteria for passive index investing. Graham MoS via dollar-cost averaging into diversified basket."
+      "rationale": [
+        "Graham: Global diversification provides margin of safety through broad market exposure",
+        "Buffett: Quality via access to world's best companies at 0.22% fee",
+        "Lynch: Understandable - own a piece of the global economy",
+        "Perfect core holding for long-term compounding"
+      ]
     },
     {
       "ticker": "VMID",
@@ -345,7 +350,11 @@ For each potential stock, provide:
       "action": "BUY",
       "category": "SATELLITE",
       "wrapper": "ISA",
-      "rationale": "UK mid-cap exposure for satellite allocation. Lynch 'know what you own' - domestic companies with growth potential."
+      "rationale": [
+        "Lynch: Know what you own - domestic UK mid-cap companies",
+        "Marks: UK mid-caps currently offer better value than large caps",
+        "Satellite allocation for growth potential"
+      ]
     }
   ],
   "holdingsReview": {
@@ -379,7 +388,7 @@ For each potential stock, provide:
 }
 \`\`\`
 
-Replace the example values with actual analysis. The JSON must be valid and parseable. Include ALL recommended trades in the trades array with full rationale for each.
+Replace the example values with actual analysis. The JSON must be valid and parseable. Include ALL recommended trades in the trades array. IMPORTANT: The "rationale" field MUST be an array of strings, with each point on a separate line referencing the relevant pillar (Graham, Buffett, Munger, Marks, or Lynch) where applicable.
 
 ---
 
