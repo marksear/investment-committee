@@ -1070,9 +1070,14 @@ Marks & Spencer, MKS"
                                 {trade.rationale && (
                                   <div className="mt-3 pt-3 border-t border-gray-200">
                                     <p className="text-xs text-gray-500 uppercase mb-2">Investment Rationale</p>
-                                    <p className="text-sm text-gray-700 bg-white p-3 rounded-lg whitespace-pre-wrap">
-                                      {trade.rationale}
-                                    </p>
+                                    <div className="bg-white p-4 rounded-lg space-y-2">
+                                      {trade.rationale.split(/[.!?](?:\s|$)/).filter(s => s.trim()).map((sentence, idx) => (
+                                        <div key={idx} className="flex items-start gap-2">
+                                          <span className="text-amber-500 mt-0.5">•</span>
+                                          <p className="text-sm text-gray-700">{sentence.trim()}</p>
+                                        </div>
+                                      ))}
+                                    </div>
                                   </div>
                                 )}
                               </div>
