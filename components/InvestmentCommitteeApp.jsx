@@ -900,61 +900,227 @@ Marks & Spencer, MKS"
           return (
             <div className="space-y-6">
               {/* Report Header */}
-              <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl p-6 text-white">
+              <div className="bg-gradient-to-r from-amber-900 to-orange-800 rounded-2xl p-6 text-white">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="text-gray-400 text-sm">The Investment Program Report</p>
+                    <p className="text-amber-200 text-sm">The Investment Program Report</p>
                     <h1 className="text-2xl font-bold mt-1">{formData.month}</h1>
-                    <p className="text-amber-400 mt-2">{analysisResult.mode || 'Balanced'} Mode</p>
+                    <p className="text-amber-300 mt-2">
+                      {formData.wrapper} • £{formData.contribution}/month • {analysisResult.mode || 'Balanced'} Mode
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4 mt-6">
+                  <div className="bg-white/10 rounded-lg p-3 flex flex-col items-center justify-center">
+                    <p className="text-amber-200 text-xs text-center">Committee Stance</p>
+                    <p className={`text-lg font-bold text-center ${
+                      analysisResult.mode === 'AGGRESSIVE' ? 'text-green-400' :
+                      analysisResult.mode === 'LOW_RISK' ? 'text-amber-400' :
+                      'text-amber-300'
+                    }`}>{analysisResult.mode || 'Balanced'}</p>
+                  </div>
+                  <div className="bg-white/10 rounded-lg p-3 flex flex-col items-center justify-center">
+                    <p className="text-amber-200 text-xs text-center">Trades Recommended</p>
+                    <p className="text-lg font-bold text-center">{analysisResult.trades?.length || 0}</p>
+                  </div>
+                  <div className="bg-white/10 rounded-lg p-3 flex flex-col items-center justify-center">
+                    <p className="text-amber-200 text-xs text-center">Market Regime</p>
+                    <p className={`text-lg font-bold text-center ${
+                      marketPulseData?.uk?.regime === 'Trending Up' ? 'text-green-400' :
+                      marketPulseData?.uk?.regime === 'Trending Down' ? 'text-red-400' :
+                      marketPulseData?.uk?.regime === 'Volatile' ? 'text-orange-400' :
+                      marketPulseData?.uk?.regime === 'Choppy' ? 'text-amber-400' :
+                      'text-amber-300'
+                    }`}>{marketPulseData?.uk?.regime || 'Analyzing...'}</p>
                   </div>
                 </div>
               </div>
 
-              {/* Summary */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-                <h2 className="text-lg font-bold text-gray-900 mb-4">Executive Summary</h2>
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-                  <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">
-                    {analysisResult.summary || 'Analysis complete. Review your recommendations below.'}
-                  </p>
-                </div>
+              {/* Report Tabs */}
+              <div className="flex gap-2 border-b border-gray-200 overflow-x-auto">
+                {[
+                  { id: 'summary', label: 'Summary' },
+                  { id: 'trades', label: 'Recommended Trades' },
+                  { id: 'holdings', label: 'Holdings Review' },
+                  { id: 'full', label: 'Full Report' },
+                ].map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveReportTab(tab.id)}
+                    className={`px-4 py-2 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
+                      activeReportTab === tab.id
+                        ? 'border-amber-500 text-amber-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
               </div>
 
-              {/* Recommendations */}
-              {analysisResult.trades && analysisResult.trades.length > 0 && (
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-                  <h3 className="font-bold text-gray-900 mb-3">Recommended Trades</h3>
-                  <div className="space-y-3">
-                    {analysisResult.trades.map((trade, i) => (
-                      <div key={i} className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-xl">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 bg-green-600 rounded-xl flex items-center justify-center text-white font-bold">
-                            {i + 1}
-                          </div>
-                          <div>
-                            <p className="font-bold text-gray-900">{trade.ticker}</p>
-                            <p className="text-sm text-gray-600">{trade.name}</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold text-xl text-gray-900">£{trade.amount}</p>
-                          <p className="text-sm text-gray-500">{trade.rationale}</p>
-                        </div>
+              {/* Tab Content */}
+              {activeReportTab === 'summary' && (
+                <div className="space-y-6">
+                  {/* Executive Summary */}
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                    <h2 className="text-lg font-bold text-gray-900 mb-4">Executive Summary</h2>
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                      <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">
+                        {analysisResult.summary || 'Analysis complete. Review your recommendations below.'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Chair's Decision */}
+                  {analysisResult.chairDecision && (
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                      <h3 className="font-bold text-gray-900 mb-3">Chair's Synthesis</h3>
+                      <div className="prose prose-sm max-w-none">
+                        <pre className="whitespace-pre-wrap text-sm text-gray-700 bg-gray-50 p-4 rounded-lg overflow-auto">
+                          {analysisResult.chairDecision}
+                        </pre>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  )}
+
+                  {/* Pillar Reminder */}
+                  {analysisResult.pillarReminder && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                      <h3 className="font-medium text-amber-900 mb-2">Wisdom from the Masters</h3>
+                      <p className="text-amber-800 italic whitespace-pre-wrap">{analysisResult.pillarReminder}</p>
+                    </div>
+                  )}
                 </div>
               )}
 
-              {/* Full Analysis */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-                <h3 className="font-bold text-gray-900 mb-3">Full Analysis</h3>
-                <div className="prose prose-sm max-w-none">
-                  <pre className="whitespace-pre-wrap text-sm text-gray-700 bg-gray-50 p-4 rounded-lg overflow-auto">
-                    {analysisResult.fullAnalysis || 'No detailed analysis available.'}
-                  </pre>
+              {activeReportTab === 'trades' && (
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                  <div className="p-4 border-b border-gray-100">
+                    <h2 className="font-bold text-gray-900">Recommended Trades</h2>
+                  </div>
+
+                  {analysisResult.trades && analysisResult.trades.length > 0 ? (
+                    <div>
+                      {analysisResult.trades.map((trade, index) => (
+                        <div key={index} className="border-b border-gray-100 last:border-b-0">
+                          <button
+                            onClick={() => setExpandedStock(expandedStock === trade.ticker ? null : trade.ticker)}
+                            className="w-full p-4 flex items-center justify-between hover:bg-gray-50"
+                          >
+                            <div className="flex items-center gap-4">
+                              <div className={`w-12 h-12 ${
+                                trade.action === 'BUY' ? 'bg-green-600' :
+                                trade.action === 'SELL' ? 'bg-red-600' :
+                                trade.action === 'HOLD' ? 'bg-amber-500' :
+                                'bg-green-600'
+                              } rounded-xl flex items-center justify-center text-white font-bold text-xl`}>
+                                {trade.action === 'BUY' ? 'B' : trade.action === 'SELL' ? 'S' : trade.action === 'HOLD' ? 'H' : 'B'}
+                              </div>
+                              <div className="text-left">
+                                <p className="font-bold text-gray-900">{trade.ticker}</p>
+                                <p className="text-sm text-gray-500">{trade.name}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                              <div className="text-right">
+                                <p className="font-bold text-gray-900">£{trade.amount}</p>
+                                <p className="text-sm text-gray-500">{trade.action || 'BUY'}</p>
+                              </div>
+                              <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${expandedStock === trade.ticker ? 'rotate-180' : ''}`} />
+                            </div>
+                          </button>
+
+                          {/* Expanded trade details */}
+                          {expandedStock === trade.ticker && (
+                            <div className="px-4 pb-4 bg-gray-50 border-t border-gray-100">
+                              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 py-4">
+                                {trade.amount && (
+                                  <div>
+                                    <p className="text-xs text-gray-500 uppercase">Amount</p>
+                                    <p className="font-bold text-gray-900">£{trade.amount}</p>
+                                  </div>
+                                )}
+                                {trade.action && (
+                                  <div>
+                                    <p className="text-xs text-gray-500 uppercase">Action</p>
+                                    <p className="font-bold text-gray-900">{trade.action}</p>
+                                  </div>
+                                )}
+                                {trade.wrapper && (
+                                  <div>
+                                    <p className="text-xs text-gray-500 uppercase">Wrapper</p>
+                                    <p className="font-bold text-gray-900">{trade.wrapper}</p>
+                                  </div>
+                                )}
+                              </div>
+                              {trade.rationale && (
+                                <div className="mt-3 pt-3 border-t border-gray-200">
+                                  <p className="text-xs text-gray-500 uppercase mb-2">Rationale</p>
+                                  <p className="text-sm text-gray-700 bg-white p-3 rounded-lg">
+                                    {trade.rationale}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-8 text-center text-gray-500">
+                      <p>No specific trades recommended this month.</p>
+                      <p className="text-sm mt-2">Check the Full Report for detailed analysis.</p>
+                    </div>
+                  )}
                 </div>
-              </div>
+              )}
+
+              {activeReportTab === 'holdings' && (
+                <div className="space-y-6">
+                  {/* Holdings Review */}
+                  {analysisResult.holdingsReview && (
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                      <h3 className="font-bold text-gray-900 mb-3">Current Holdings Review</h3>
+                      <div className="prose prose-sm max-w-none">
+                        <pre className="whitespace-pre-wrap text-sm text-gray-700 bg-gray-50 p-4 rounded-lg overflow-auto">
+                          {analysisResult.holdingsReview}
+                        </pre>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Committee Positions */}
+                  {analysisResult.committeePositions && (
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                      <h3 className="font-bold text-gray-900 mb-3">Committee Positions</h3>
+                      <div className="prose prose-sm max-w-none">
+                        <pre className="whitespace-pre-wrap text-sm text-gray-700 bg-gray-50 p-4 rounded-lg overflow-auto">
+                          {analysisResult.committeePositions}
+                        </pre>
+                      </div>
+                    </div>
+                  )}
+
+                  {!analysisResult.holdingsReview && !analysisResult.committeePositions && (
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 text-center text-gray-500">
+                      <p>No holdings review available.</p>
+                      <p className="text-sm mt-2">Check the Full Report for detailed analysis.</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {activeReportTab === 'full' && (
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                  <h3 className="font-bold text-gray-900 mb-3">Full Analysis Report</h3>
+                  <div className="prose prose-sm max-w-none">
+                    <pre className="whitespace-pre-wrap text-sm text-gray-700 bg-gray-50 p-4 rounded-lg overflow-auto max-h-[600px]">
+                      {analysisResult.fullAnalysis || 'No detailed analysis available.'}
+                    </pre>
+                  </div>
+                </div>
+              )}
 
               {/* Start Over */}
               <div className="text-center">
@@ -963,6 +1129,7 @@ Marks & Spencer, MKS"
                     setStep(0)
                     setAnalysisComplete(false)
                     setAnalysisResult(null)
+                    setActiveReportTab('summary')
                   }}
                   className="text-gray-500 hover:text-gray-700"
                 >
@@ -1052,6 +1219,22 @@ Marks & Spencer, MKS"
                 <ChevronRight className="w-5 h-5" />
               </button>
             )}
+          </div>
+        )}
+
+        {analysisComplete && (
+          <div className="mt-6 text-center">
+            <button
+              onClick={() => {
+                setStep(0)
+                setAnalysisComplete(false)
+                setAnalysisResult(null)
+                setActiveReportTab('summary')
+              }}
+              className="text-gray-500 hover:text-gray-700 text-sm"
+            >
+              ← Start New Analysis
+            </button>
           </div>
         )}
 
