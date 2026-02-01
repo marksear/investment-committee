@@ -106,9 +106,7 @@ Every candidate must include:
 | User sentiment | ${formData.marketSentiment}/10 |
 | US assets permitted | ${formData.usPermitted ? 'Yes' : 'No'} |
 | Bitcoin permitted | ${formData.btcPermitted ? 'Yes' : 'No'} |
-| Build gold this month | ${formData.buildGold ? 'Yes' : 'No'} |
-| Physical gold value | £${formData.goldValue} |
-| Bitcoin value | £${formData.btcValue} |
+| Note | Gold and Bitcoin holdings should be included in the holdings list above |
 
 **Market Pulse:**
 - UK: ${marketPulse.uk.score}/10 (${marketPulse.uk.label})

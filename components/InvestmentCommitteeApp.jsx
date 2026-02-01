@@ -25,15 +25,12 @@ export default function InvestmentCommitteeApp() {
     broker: 'AJ Bell',
     holdingsText: '',
     potentialsText: '',
-    goldValue: '0',
-    btcValue: '0',
     coreSatSplit: '85/15',
     timeHorizon: '10',
     marketSentiment: 5,
     drawdownTrigger: '8',
     usPermitted: true,
     btcPermitted: false,
-    buildGold: false,
   })
 
   const [holdingsFileName, setHoldingsFileName] = useState('')
@@ -479,8 +476,10 @@ export default function InvestmentCommitteeApp() {
                 placeholder="Example:
 Vanguard FTSE All-World, VWRP, £649
 HSBC Holdings, HSBA, £370
+Physical Gold, GOLD, £500
+Bitcoin, BTC, £200
 Cash, CASH, £176"
-                rows={6}
+                rows={7}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 font-mono text-sm"
               />
             </div>
@@ -527,7 +526,8 @@ Marks & Spencer, MKS"
               <h3 className="font-medium text-blue-900 mb-2">Tips</h3>
               <ul className="text-sm text-blue-800 space-y-1">
                 <li>• CSV should have columns: Investment/Name, Ticker, Value (£)</li>
-                <li>• Include all holdings including cash</li>
+                <li>• Include all holdings: stocks, ETFs, gold, bitcoin, and cash</li>
+                <li>• Use GOLD for physical gold, BTC for bitcoin</li>
                 <li>• Potentials will receive full investigation with Graham's 7 tests, Buffett quality checks, Munger inversion analysis, and star ratings</li>
               </ul>
             </div>
@@ -667,26 +667,6 @@ Marks & Spencer, MKS"
               })()}
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Physical Gold (£)</label>
-                <input
-                  type="number"
-                  value={formData.goldValue}
-                  onChange={(e) => setFormData({ ...formData, goldValue: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Bitcoin (£)</label>
-                <input
-                  type="number"
-                  value={formData.btcValue}
-                  onChange={(e) => setFormData({ ...formData, btcValue: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                />
-              </div>
-            </div>
           </div>
         )
 
@@ -757,7 +737,6 @@ Marks & Spencer, MKS"
               {[
                 { key: 'usPermitted', label: 'US assets permitted' },
                 { key: 'btcPermitted', label: 'Bitcoin permitted' },
-                { key: 'buildGold', label: 'Build gold position this month' },
               ].map(({ key, label }) => (
                 <label key={key} className="flex items-center gap-3 cursor-pointer">
                   <input
