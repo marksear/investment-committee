@@ -320,25 +320,133 @@ For each potential stock, provide:
 
 ---
 
+## PART H — STRUCTURED DATA (REQUIRED)
+
+**IMPORTANT: You MUST include this JSON block at the very end of your response. This is used for parsing and displaying the results.**
+
+\`\`\`json
+{
+  "mode": "Balanced",
+  "summary": "This month we deploy £500 into VWRL (£350) and VMID (£150), maintaining our 85/15 Core/Satellite split...",
+  "trades": [
+    {
+      "ticker": "VWRL",
+      "name": "Vanguard FTSE All-World UCITS ETF",
+      "amount": "350",
+      "action": "BUY",
+      "category": "CORE",
+      "wrapper": "ISA",
+      "rationale": "Global diversification with low cost. Meets Buffett quality criteria for passive index investing. Graham MoS via dollar-cost averaging into diversified basket."
+    },
+    {
+      "ticker": "VMID",
+      "name": "Vanguard FTSE 250 UCITS ETF",
+      "amount": "150",
+      "action": "BUY",
+      "category": "SATELLITE",
+      "wrapper": "ISA",
+      "rationale": "UK mid-cap exposure for satellite allocation. Lynch 'know what you own' - domestic companies with growth potential."
+    }
+  ],
+  "holdingsReview": {
+    "totalReviewed": 5,
+    "flagged": 1,
+    "recommendedForExit": 0,
+    "holdings": [
+      {
+        "ticker": "VWRL",
+        "currentPercent": "60%",
+        "category": "CORE",
+        "lynchLabel": "Index",
+        "doctrineFit": "Strong",
+        "meetsMandate": true,
+        "redFlags": [],
+        "action": "HOLD"
+      }
+    ]
+  },
+  "chairDecision": "Deploy full £500 contribution into core global equity exposure, maintaining defensive posture given current market conditions.",
+  "pillarReminder": "Graham: 'In the short run, the market is a voting machine but in the long run it is a weighing machine.' Stay disciplined.",
+  "triggerStatus": {
+    "L1": false,
+    "L2": false,
+    "L3": false,
+    "A1": false,
+    "A2": false
+  },
+  "totalDeployed": "500",
+  "confidence": "Medium"
+}
+\`\`\`
+
+Replace the example values with actual analysis. The JSON must be valid and parseable. Include ALL recommended trades in the trades array with full rationale for each.
+
+---
+
 Be specific, practical, and tie everything back to the Five Pillars framework. Use real data where possible and mark assumptions as **NEEDS CHECK**.`
 }
 
 function parseResponse(responseText) {
+  // First, try to extract structured JSON data (most reliable)
+  const jsonData = extractJsonData(responseText)
+
   const result = {
-    mode: extractMode(responseText),
-    summary: extractSummary(responseText),
-    trades: extractTrades(responseText),
+    mode: jsonData?.mode || extractMode(responseText),
+    summary: jsonData?.summary || extractSummary(responseText),
+    trades: jsonData?.trades || extractTrades(responseText),
+    holdingsReview: jsonData?.holdingsReview ? formatHoldingsReview(jsonData.holdingsReview) : (extractSection(responseText, 'PART B', 'PART C') || extractSection(responseText, 'HOLDINGS REVIEW', 'PART C')),
+    chairDecision: jsonData?.chairDecision || null,
+    pillarReminder: jsonData?.pillarReminder || null,
+    triggerStatus: jsonData?.triggerStatus || null,
+    totalDeployed: jsonData?.totalDeployed || null,
+    confidence: jsonData?.confidence || null,
     triggerScan: extractSection(responseText, 'PART A', 'PART B') || extractSection(responseText, 'TRIGGER SCAN', 'PART B'),
-    holdingsReview: extractSection(responseText, 'PART B', 'PART C') || extractSection(responseText, 'HOLDINGS REVIEW', 'PART C'),
     investigations: extractSection(responseText, 'STOCK INVESTIGATIONS', 'PART D') || extractSection(responseText, 'PART C', 'PART D'),
     committeePositions: extractSection(responseText, 'PART D', 'PART E') || extractSection(responseText, 'THREE COMMITTEE POSITIONS', 'PART E'),
     mungerVeto: extractSection(responseText, 'PART E', 'PART F') || extractSection(responseText, 'MUNGER VETO', 'PART F'),
     chairSynthesis: extractSection(responseText, 'PART F', 'PART G') || extractSection(responseText, 'CHAIR SYNTHESIS', 'PART G'),
-    decisionJournal: extractSection(responseText, 'PART G', null) || extractSection(responseText, 'DECISION JOURNAL', null),
+    decisionJournal: extractSection(responseText, 'PART G', 'PART H') || extractSection(responseText, 'DECISION JOURNAL', 'PART H'),
     fullAnalysis: responseText
   }
 
   return result
+}
+
+// Extract JSON data block from response
+function extractJsonData(text) {
+  try {
+    // Look for JSON code block
+    const jsonMatch = text.match(/```json\s*\n?([\s\S]*?)\n?```/i)
+    if (jsonMatch && jsonMatch[1]) {
+      const jsonStr = jsonMatch[1].trim()
+      const data = JSON.parse(jsonStr)
+      console.log('Successfully parsed JSON data:', data)
+      return data
+    }
+  } catch (error) {
+    console.error('Failed to parse JSON data:', error.message)
+  }
+  return null
+}
+
+// Format holdings review from JSON to display string
+function formatHoldingsReview(holdingsData) {
+  if (!holdingsData) return null
+
+  let text = `**Holdings Review Summary:**\n`
+  text += `- Total Reviewed: ${holdingsData.totalReviewed || 0}\n`
+  text += `- Flagged: ${holdingsData.flagged || 0}\n`
+  text += `- Recommended for Exit: ${holdingsData.recommendedForExit || 0}\n\n`
+
+  if (holdingsData.holdings && holdingsData.holdings.length > 0) {
+    text += `| Holding | % | Category | Lynch Label | Doctrine Fit | Action |\n`
+    text += `|---------|---|----------|-------------|--------------|--------|\n`
+    for (const h of holdingsData.holdings) {
+      text += `| ${h.ticker} | ${h.currentPercent} | ${h.category} | ${h.lynchLabel} | ${h.doctrineFit} | ${h.action} |\n`
+    }
+  }
+
+  return text
 }
 
 function extractMode(text) {

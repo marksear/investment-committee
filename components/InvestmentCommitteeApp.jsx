@@ -998,74 +998,88 @@ Marks & Spencer, MKS"
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                   <div className="p-4 border-b border-gray-100">
                     <h2 className="font-bold text-gray-900">Recommended Trades</h2>
+                    {analysisResult.totalDeployed && (
+                      <p className="text-sm text-gray-500 mt-1">Total to deploy: £{analysisResult.totalDeployed}</p>
+                    )}
                   </div>
 
                   {analysisResult.trades && analysisResult.trades.length > 0 ? (
                     <div>
-                      {analysisResult.trades.map((trade, index) => (
-                        <div key={index} className="border-b border-gray-100 last:border-b-0">
-                          <button
-                            onClick={() => setExpandedStock(expandedStock === trade.ticker ? null : trade.ticker)}
-                            className="w-full p-4 flex items-center justify-between hover:bg-gray-50"
-                          >
-                            <div className="flex items-center gap-4">
-                              <div className={`w-12 h-12 ${
-                                trade.action === 'BUY' ? 'bg-green-600' :
-                                trade.action === 'SELL' ? 'bg-red-600' :
-                                trade.action === 'HOLD' ? 'bg-amber-500' :
-                                'bg-green-600'
-                              } rounded-xl flex items-center justify-center text-white font-bold text-xl`}>
-                                {trade.action === 'BUY' ? 'B' : trade.action === 'SELL' ? 'S' : trade.action === 'HOLD' ? 'H' : 'B'}
+                      {analysisResult.trades.map((trade, index) => {
+                        const tradeKey = `${trade.ticker}-${index}`
+                        const isExpanded = expandedStock === tradeKey
+                        return (
+                          <div key={tradeKey} className="border-b border-gray-100 last:border-b-0">
+                            <button
+                              onClick={() => setExpandedStock(isExpanded ? null : tradeKey)}
+                              className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                            >
+                              <div className="flex items-center gap-4">
+                                <div className={`w-12 h-12 ${
+                                  trade.action === 'BUY' ? 'bg-green-600' :
+                                  trade.action === 'SELL' ? 'bg-red-600' :
+                                  trade.action === 'HOLD' ? 'bg-amber-500' :
+                                  'bg-green-600'
+                                } rounded-xl flex items-center justify-center text-white font-bold text-xl`}>
+                                  {trade.action === 'BUY' ? 'B' : trade.action === 'SELL' ? 'S' : trade.action === 'HOLD' ? 'H' : 'B'}
+                                </div>
+                                <div className="text-left">
+                                  <p className="font-bold text-gray-900">{trade.ticker}</p>
+                                  <p className="text-sm text-gray-500">{trade.name}</p>
+                                </div>
+                                {trade.category && (
+                                  <span className={`px-2 py-1 text-xs font-medium rounded ${
+                                    trade.category === 'CORE' ? 'bg-blue-100 text-blue-700' :
+                                    trade.category === 'SATELLITE' ? 'bg-purple-100 text-purple-700' :
+                                    'bg-gray-100 text-gray-600'
+                                  }`}>
+                                    {trade.category}
+                                  </span>
+                                )}
                               </div>
-                              <div className="text-left">
-                                <p className="font-bold text-gray-900">{trade.ticker}</p>
-                                <p className="text-sm text-gray-500">{trade.name}</p>
+                              <div className="flex items-center gap-4">
+                                <div className="text-right">
+                                  <p className="font-bold text-gray-900">£{trade.amount}</p>
+                                  <p className="text-sm text-gray-500">{trade.action || 'BUY'}</p>
+                                </div>
+                                <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
                               </div>
-                            </div>
-                            <div className="flex items-center gap-4">
-                              <div className="text-right">
-                                <p className="font-bold text-gray-900">£{trade.amount}</p>
-                                <p className="text-sm text-gray-500">{trade.action || 'BUY'}</p>
-                              </div>
-                              <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${expandedStock === trade.ticker ? 'rotate-180' : ''}`} />
-                            </div>
-                          </button>
+                            </button>
 
-                          {/* Expanded trade details */}
-                          {expandedStock === trade.ticker && (
-                            <div className="px-4 pb-4 bg-gray-50 border-t border-gray-100">
-                              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 py-4">
-                                {trade.amount && (
+                            {/* Expanded trade details */}
+                            {isExpanded && (
+                              <div className="px-4 pb-4 bg-gray-50 border-t border-gray-100">
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-4">
                                   <div>
                                     <p className="text-xs text-gray-500 uppercase">Amount</p>
                                     <p className="font-bold text-gray-900">£{trade.amount}</p>
                                   </div>
-                                )}
-                                {trade.action && (
                                   <div>
                                     <p className="text-xs text-gray-500 uppercase">Action</p>
-                                    <p className="font-bold text-gray-900">{trade.action}</p>
+                                    <p className="font-bold text-gray-900">{trade.action || 'BUY'}</p>
                                   </div>
-                                )}
-                                {trade.wrapper && (
+                                  <div>
+                                    <p className="text-xs text-gray-500 uppercase">Category</p>
+                                    <p className="font-bold text-gray-900">{trade.category || 'N/A'}</p>
+                                  </div>
                                   <div>
                                     <p className="text-xs text-gray-500 uppercase">Wrapper</p>
-                                    <p className="font-bold text-gray-900">{trade.wrapper}</p>
+                                    <p className="font-bold text-gray-900">{trade.wrapper || formData.wrapper}</p>
+                                  </div>
+                                </div>
+                                {trade.rationale && (
+                                  <div className="mt-3 pt-3 border-t border-gray-200">
+                                    <p className="text-xs text-gray-500 uppercase mb-2">Investment Rationale</p>
+                                    <p className="text-sm text-gray-700 bg-white p-3 rounded-lg whitespace-pre-wrap">
+                                      {trade.rationale}
+                                    </p>
                                   </div>
                                 )}
                               </div>
-                              {trade.rationale && (
-                                <div className="mt-3 pt-3 border-t border-gray-200">
-                                  <p className="text-xs text-gray-500 uppercase mb-2">Rationale</p>
-                                  <p className="text-sm text-gray-700 bg-white p-3 rounded-lg">
-                                    {trade.rationale}
-                                  </p>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      ))}
+                            )}
+                          </div>
+                        )
+                      })}
                     </div>
                   ) : (
                     <div className="p-8 text-center text-gray-500">
