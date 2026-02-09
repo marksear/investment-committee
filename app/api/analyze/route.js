@@ -157,14 +157,12 @@ For each stock above, run the STOCK INVESTIGATION PROTOCOL:
 
 ## PART A — TRIGGER SCAN + MODE SELECTION
 
-Provide trigger status table:
-| Trigger | Status | Justification |
-|---------|--------|---------------|
-| L1 (Drawdown >${formData.drawdownTrigger}%) | Yes/No | ... |
-| L2 (User anxious) | Yes/No | Based on sentiment ${formData.marketSentiment}/10 |
-| L3 (Near-term cash need) | No | ... |
-| A1 (Equities down ≥10% from 52-week high) | Yes/No | ... |
-| A2 (Portfolio at ATH + 3 months consistent) | Yes/No | ... |
+**Trigger Status:**
+- **L1 (Drawdown >${formData.drawdownTrigger}%):** Yes/No — [Justification]
+- **L2 (User anxious):** Yes/No — Based on sentiment ${formData.marketSentiment}/10
+- **L3 (Near-term cash need):** Yes/No — [Justification]
+- **A1 (Equities down ≥10% from 52-week high):** Yes/No — [Justification]
+- **A2 (Portfolio at ATH + 3 months consistent):** Yes/No — [Justification]
 
 **Sentiment/Pendulum assessment:** Where are we on fear-greed spectrum? (1-10)
 **Mode this month:** Aggressive / Balanced / Low Risk
@@ -174,11 +172,20 @@ Provide trigger status table:
 
 ## PART B — HOLDINGS REVIEW
 
-| Holding | Current % | CORE/SAT | Lynch Label | Doctrine Fit | Still Meets Mandate? | Red Flags | Action |
-|---------|-----------|----------|-------------|--------------|---------------------|-----------|--------|
-| [For each holding...] |
+For each holding, provide:
 
-**Summary:** [X reviewed. Y flagged. Z recommended for exit.]
+**[Holding Name] ([Ticker])**
+- Current %: X%
+- Category: CORE / SATELLITE
+- Lynch Label: [Stalwart/Fast Grower/Cyclic/etc.]
+- Doctrine Fit: Strong / Moderate / Weak
+- Still Meets Mandate: Yes / No
+- Red Flags: [List any concerns or "None"]
+- Action: HOLD / SELL / ADD
+
+[Repeat for each holding...]
+
+**Summary:** X reviewed. Y flagged. Z recommended for exit.
 
 ---
 
@@ -196,16 +203,14 @@ For each potential stock, provide:
 **Lynch Classification:** [Label] — [Justification]
 
 **Graham's 7 Tests:**
-| Test | Criterion | Actual | Pass/Fail |
-|------|-----------|--------|-----------|
-| 1. Adequate Size | Revenue >£250m | ... | |
-| 2. Financial Condition | Current Ratio ≥2.0 | ... | |
-| 3. Earnings Stability | Positive EPS 5yr | ... | |
-| 4. Dividend Record | 10+ years | ... | |
-| 5. Earnings Growth | ≥33% over 10yr | ... | |
-| 6. Moderate P/E | ≤15 | ... | |
-| 7. Moderate P/B | ≤1.5 | ... | |
-| 8. Graham Number | P/E × P/B ≤22.5 | ... | |
+1. **Adequate Size** (Revenue >£250m): [Actual] — Pass/Fail
+2. **Financial Condition** (Current Ratio ≥2.0): [Actual] — Pass/Fail
+3. **Earnings Stability** (Positive EPS 5yr): [Actual] — Pass/Fail
+4. **Dividend Record** (10+ years): [Actual] — Pass/Fail
+5. **Earnings Growth** (≥33% over 10yr): [Actual] — Pass/Fail
+6. **Moderate P/E** (≤15): [Actual] — Pass/Fail
+7. **Moderate P/B** (≤1.5): [Actual] — Pass/Fail
+8. **Graham Number** (P/E × P/B ≤22.5): [Actual] — Pass/Fail
 
 **Graham Score: X/7**
 
@@ -232,14 +237,12 @@ For each potential stock, provide:
 - Margin of Safety: ...%
 
 **VERDICT:**
-| Dimension | Score |
-|-----------|-------|
-| Graham (Value) | X/10 |
-| Buffett (Quality) | X/10 |
-| Munger (Risk) | X/10 |
-| Marks (Timing) | X/10 |
-| Lynch (Clarity) | X/10 |
-| **Overall** | **X/10** |
+- Graham (Value): X/10
+- Buffett (Quality): X/10
+- Munger (Risk): X/10
+- Marks (Timing): X/10
+- Lynch (Clarity): X/10
+- **Overall: X/10**
 
 **Star Rating:** ⭐⭐⭐⭐⭐ / ⭐⭐⭐⭐ / ⭐⭐⭐ / ⭐⭐ / ⭐
 **Action:** Add to Shortlist / Watchlist / Pass
@@ -271,13 +274,11 @@ For each potential stock, provide:
 
 ## PART E — MUNGER VETO CHECK
 
-| Veto | Status | Evidence |
-|------|--------|----------|
-| V1: Cap compliance | Pass/Fail | ... |
-| V2: Thesis articulation | Pass/Fail | ... |
-| V3: Single stock due diligence | Pass/Fail/N/A | ... |
-| V4: Inversion check | Pass/Fail | ... |
-| V5: Circle of competence | Pass/Fail | ... |
+- **V1: Cap compliance** — Pass/Fail — [Evidence]
+- **V2: Thesis articulation** — Pass/Fail — [Evidence]
+- **V3: Single stock due diligence** — Pass/Fail/N/A — [Evidence]
+- **V4: Inversion check** — Pass/Fail — [Evidence]
+- **V5: Circle of competence** — Pass/Fail — [Evidence]
 
 ---
 
@@ -293,11 +294,9 @@ For each potential stock, provide:
 
 **FINAL PLAN — "This month we will:"**
 
-| Item | Ticker | Amount | Category |
-|------|--------|--------|----------|
-| Trade 1 | ... | £... | CORE/SAT |
-| Trade 2 (if any) | ... | £... | CORE/SAT |
-| Gold (if applicable) | SGLN/PHAU | £... | Buy/No |
+- **Trade 1:** [Ticker] — £[Amount] — CORE/SATELLITE
+- **Trade 2 (if any):** [Ticker] — £[Amount] — CORE/SATELLITE
+- **Gold (if applicable):** SGLN/PHAU — £[Amount] — Buy/No
 
 **Total deployed:** £...
 
@@ -317,19 +316,21 @@ For each potential stock, provide:
 
 ## PART G — DECISION JOURNAL ENTRY
 
-| Field | Entry |
-|-------|-------|
-| Month/date | ${formData.month} |
-| Mode | [Selected mode] |
-| Trades executed | [List] |
-| Gold | Buy / No |
-| Dividend focus | Yes / No |
-| 1-sentence thesis | "..." |
-| Risks (2 bullets) | 1. ... 2. ... |
-| What changes my mind | ... |
-| Watch next month | 1. ... 2. ... |
-| Confidence | Low / Medium / High |
-| Munger Veto Status | All Pass / [List failures] |
+- **Month/date:** ${formData.month}
+- **Mode:** [Selected mode]
+- **Trades executed:** [List]
+- **Gold:** Buy / No
+- **Dividend focus:** Yes / No
+- **1-sentence thesis:** "[Your thesis]"
+- **Risks:**
+  1. [Risk 1]
+  2. [Risk 2]
+- **What changes my mind:** [Trigger]
+- **Watch next month:**
+  1. [Item 1]
+  2. [Item 2]
+- **Confidence:** Low / Medium / High
+- **Munger Veto Status:** All Pass / [List failures]
 
 ---
 
