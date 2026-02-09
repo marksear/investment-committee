@@ -92,6 +92,23 @@ Every candidate must include:
 
 ---
 
+## DIVIDEND INCOME CRITERIA (When "Seek dividend income" = Yes)
+If the user is seeking dividend income, prioritise quality dividend stocks with:
+- **Dividend Track Record:** 10+ years of consistent dividends (ideally growing)
+- **Dividend Cover:** Earnings per share ≥ 2x dividend per share
+- **Payout Ratio:** Sustainable payout ratio (<70% for most sectors, <90% for REITs/utilities)
+- **Yield Quality:** Current yield vs 5-year average (prefer fair/undervalued yields)
+- **Sector Diversification:** Spread across defensive sectors (utilities, consumer staples, healthcare)
+- **Growth + Income:** Favour "dividend growers" over highest yielders (dividend aristocrats concept)
+- **Graham's Test #4:** Dividend record of 10+ consecutive years weighs heavily
+
+When seeking dividends, recommend a mix of:
+1. **UK Dividend ETFs:** VHYL, IUKD, or similar
+2. **Individual Dividend Aristocrats:** Quality UK companies with long dividend histories
+3. **High-yield defensive stocks:** Utilities, telecoms, consumer staples with sustainable yields
+
+---
+
 # INPUTS FOR THIS MONTH
 
 | Input | Value |
@@ -105,8 +122,7 @@ Every candidate must include:
 | Drawdown trigger | ${formData.drawdownTrigger}% |
 | User sentiment | ${formData.marketSentiment}/10 |
 | US assets permitted | ${formData.usPermitted ? 'Yes' : 'No'} |
-| Bitcoin permitted | ${formData.btcPermitted ? 'Yes' : 'No'} |
-| Note | Gold and Bitcoin holdings should be included in the holdings list above |
+| Seek dividend income | ${formData.seekDividends ? 'Yes - prioritise quality dividend stocks' : 'No'} |
 
 **Market Pulse:**
 - UK: ${marketPulse.uk.score}/10 (${marketPulse.uk.label})
@@ -281,8 +297,7 @@ For each potential stock, provide:
 |------|--------|--------|----------|
 | Trade 1 | ... | £... | CORE/SAT |
 | Trade 2 (if any) | ... | £... | CORE/SAT |
-| Gold | ... | £... | Buy/No |
-| Bitcoin | ... | £... | Buy/No/N/A |
+| Gold (if applicable) | SGLN/PHAU | £... | Buy/No |
 
 **Total deployed:** £...
 
@@ -308,7 +323,7 @@ For each potential stock, provide:
 | Mode | [Selected mode] |
 | Trades executed | [List] |
 | Gold | Buy / No |
-| Bitcoin | Buy / No / N/A |
+| Dividend focus | Yes / No |
 | 1-sentence thesis | "..." |
 | Risks (2 bullets) | 1. ... 2. ... |
 | What changes my mind | ... |

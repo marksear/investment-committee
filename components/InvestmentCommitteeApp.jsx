@@ -30,7 +30,7 @@ export default function InvestmentCommitteeApp() {
     marketSentiment: 5,
     drawdownTrigger: '8',
     usPermitted: true,
-    btcPermitted: false,
+    seekDividends: false,
   })
 
   const [holdingsFileName, setHoldingsFileName] = useState('')
@@ -477,9 +477,8 @@ export default function InvestmentCommitteeApp() {
 Vanguard FTSE All-World, VWRP, £649
 HSBC Holdings, HSBA, £370
 Physical Gold, GOLD, £500
-Bitcoin, BTC, £200
 Cash, CASH, £176"
-                rows={7}
+                rows={6}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 font-mono text-sm"
               />
             </div>
@@ -526,8 +525,8 @@ Marks & Spencer, MKS"
               <h3 className="font-medium text-blue-900 mb-2">Tips</h3>
               <ul className="text-sm text-blue-800 space-y-1">
                 <li>• CSV should have columns: Investment/Name, Ticker, Value (£)</li>
-                <li>• Include all holdings: stocks, ETFs, gold, bitcoin, and cash</li>
-                <li>• Use GOLD for physical gold, BTC for bitcoin</li>
+                <li>• Include all holdings: stocks, ETFs, gold, and cash</li>
+                <li>• Use GOLD for physical gold holdings</li>
                 <li>• Potentials will receive full investigation with Graham's 7 tests, Buffett quality checks, Munger inversion analysis, and star ratings</li>
               </ul>
             </div>
@@ -733,19 +732,22 @@ Marks & Spencer, MKS"
             </div>
 
             <div className="space-y-3">
-              <label className="block text-sm font-medium text-gray-700">Permissions</label>
+              <label className="block text-sm font-medium text-gray-700">Permissions & Goals</label>
               {[
                 { key: 'usPermitted', label: 'US assets permitted' },
-                { key: 'btcPermitted', label: 'Bitcoin permitted' },
-              ].map(({ key, label }) => (
-                <label key={key} className="flex items-center gap-3 cursor-pointer">
+                { key: 'seekDividends', label: 'Seek dividend income stocks', description: 'Prioritise quality dividend payers for income' },
+              ].map(({ key, label, description }) => (
+                <label key={key} className="flex items-start gap-3 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={formData[key]}
                     onChange={(e) => setFormData({ ...formData, [key]: e.target.checked })}
-                    className="w-5 h-5 rounded border-gray-300 text-amber-500 focus:ring-amber-500"
+                    className="w-5 h-5 mt-0.5 rounded border-gray-300 text-amber-500 focus:ring-amber-500"
                   />
-                  <span className="text-gray-700">{label}</span>
+                  <div>
+                    <span className="text-gray-700">{label}</span>
+                    {description && <p className="text-xs text-gray-500">{description}</p>}
+                  </div>
                 </label>
               ))}
             </div>
