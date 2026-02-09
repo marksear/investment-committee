@@ -1,50 +1,253 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
 import {
   Upload, FileText, TrendingUp, Shield, Brain, ChevronRight, ChevronLeft,
   Check, AlertCircle, Loader2, BarChart3, PieChart, BookOpen, Star,
   AlertTriangle, Download, Share2, ChevronDown, Target, Scale, Eye,
   Lightbulb, XCircle, TrendingDown, ArrowUpRight, ShieldAlert, Zap,
-  Rocket, Globe, Newspaper, BarChart2, RefreshCw
+  Rocket, Globe, Newspaper, BarChart2, RefreshCw, CheckCircle, X
 } from 'lucide-react'
 
-// Fix markdown tables that have rows concatenated without newlines
-const fixMarkdownTables = (text) => {
-  if (!text) return text
+// Render trigger status from JSON data
+const TriggerSection = ({ triggers, sentimentScore, sentimentAssessment, mungerInversion, mode }) => {
+  if (!triggers) return null
 
-  // Split into lines and process
-  const lines = text.split('\n')
-  const fixedLines = []
+  return (
+    <div className="space-y-4">
+      <h3 className="font-bold text-gray-900">Trigger Status</h3>
+      <div className="grid gap-2">
+        {triggers.map((trigger) => (
+          <div key={trigger.id} className={`flex items-start gap-3 p-3 rounded-lg ${trigger.status ? 'bg-amber-50 border border-amber-200' : 'bg-gray-50 border border-gray-200'}`}>
+            <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${trigger.status ? 'bg-amber-500 text-white' : 'bg-gray-300 text-white'}`}>
+              {trigger.status ? <AlertTriangle className="w-3 h-3" /> : <Check className="w-3 h-3" />}
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-gray-900">{trigger.id}: {trigger.name}</span>
+                <span className={`text-xs px-2 py-0.5 rounded ${trigger.status ? 'bg-amber-200 text-amber-800' : 'bg-gray-200 text-gray-600'}`}>
+                  {trigger.status ? 'TRIGGERED' : 'Clear'}
+                </span>
+              </div>
+              <p className="text-sm text-gray-600 mt-1">{trigger.justification}</p>
+            </div>
+          </div>
+        ))}
+      </div>
 
-  for (const line of lines) {
-    // Check if this line contains multiple table rows (has || pattern or multiple | ... | patterns)
-    if (line.includes('|') && (line.match(/\|/g) || []).length > 6) {
-      // This might be multiple table rows concatenated
-      // Split on pattern where a cell ends and new row starts: "| text | | Next"
-      const parts = line.split(/\|\s*\|(?=\s*[A-Za-z0-9(L\-])/)
-      if (parts.length > 1) {
-        parts.forEach((part, i) => {
-          let row = part.trim()
-          if (!row.startsWith('|')) row = '| ' + row
-          if (!row.endsWith('|')) row = row + ' |'
-          fixedLines.push(row)
-        })
-        continue
-      }
-    }
-    fixedLines.push(line)
-  }
+      {sentimentScore && (
+        <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-center justify-between mb-2">
+            <span className="font-medium text-blue-900">Sentiment/Pendulum Assessment</span>
+            <span className="text-2xl font-bold text-blue-700">{sentimentScore}/10</span>
+          </div>
+          <p className="text-sm text-blue-800">{sentimentAssessment}</p>
+        </div>
+      )}
 
-  let fixed = fixedLines.join('\n')
+      {mode && (
+        <div className={`p-4 rounded-lg ${mode === 'AGGRESSIVE' ? 'bg-green-50 border border-green-200' : mode === 'LOW_RISK' ? 'bg-amber-50 border border-amber-200' : 'bg-blue-50 border border-blue-200'}`}>
+          <span className="text-sm font-medium text-gray-600">Mode this month:</span>
+          <span className={`ml-2 text-lg font-bold ${mode === 'AGGRESSIVE' ? 'text-green-700' : mode === 'LOW_RISK' ? 'text-amber-700' : 'text-blue-700'}`}>{mode}</span>
+        </div>
+      )}
 
-  // Also ensure separator rows (|---|---|) have newlines around them
-  fixed = fixed.replace(/([^\n])\s*(\|[\s-:]+\|[\s-:|]+)/g, '$1\n$2')
-  fixed = fixed.replace(/(\|[\s-:]+\|[\s-:|]+)\s*([^\n])/g, '$1\n$2')
+      {mungerInversion && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="flex items-start gap-2">
+            <ShieldAlert className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <span className="font-medium text-red-900">Munger Inversion:</span>
+              <p className="text-sm text-red-800 mt-1">"{mungerInversion}"</p>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
 
-  return fixed
+// Render holdings review from JSON data
+const HoldingsReviewSection = ({ holdingsData }) => {
+  if (!holdingsData) return null
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="font-bold text-gray-900">Holdings Review</h3>
+        <div className="flex gap-4 text-sm">
+          <span className="text-gray-600">Reviewed: <strong>{holdingsData.totalReviewed}</strong></span>
+          <span className="text-amber-600">Flagged: <strong>{holdingsData.flagged}</strong></span>
+          <span className="text-red-600">Exit: <strong>{holdingsData.recommendedForExit}</strong></span>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        {holdingsData.holdings?.map((holding, idx) => (
+          <div key={idx} className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-gray-900">{holding.name || holding.ticker}</span>
+                  <span className="text-sm text-gray-500">({holding.ticker})</span>
+                  <span className={`text-xs px-2 py-0.5 rounded ${holding.category === 'CORE' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
+                    {holding.category}
+                  </span>
+                </div>
+                <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
+                  <span>Weight: <strong>{holding.currentPercent}</strong></span>
+                  <span>Lynch: <strong>{holding.lynchLabel}</strong></span>
+                  <span>Fit: <strong className={holding.doctrineFit === 'Strong' ? 'text-green-600' : holding.doctrineFit === 'Weak' ? 'text-red-600' : 'text-amber-600'}>{holding.doctrineFit}</strong></span>
+                </div>
+              </div>
+              <div className="text-right">
+                <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${
+                  holding.action === 'HOLD' ? 'bg-gray-200 text-gray-700' :
+                  holding.action === 'SELL' ? 'bg-red-100 text-red-700' :
+                  holding.action === 'ADD' ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-700'
+                }`}>
+                  {holding.action}
+                </span>
+                <div className="mt-1">
+                  {holding.meetsMandate ? (
+                    <span className="text-xs text-green-600 flex items-center gap-1 justify-end"><CheckCircle className="w-3 h-3" /> Meets mandate</span>
+                  ) : (
+                    <span className="text-xs text-red-600 flex items-center gap-1 justify-end"><X className="w-3 h-3" /> Mandate concern</span>
+                  )}
+                </div>
+              </div>
+            </div>
+            {holding.redFlags && holding.redFlags.length > 0 && (
+              <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-700">
+                <strong>Red Flags:</strong> {holding.redFlags.join(', ')}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// Render Munger veto checks from JSON data
+const MungerVetoSection = ({ vetoData }) => {
+  if (!vetoData) return null
+
+  const allPass = vetoData.every(v => v.status === 'Pass' || v.status === 'N/A')
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="font-bold text-gray-900">Munger Veto Check</h3>
+        <span className={`px-3 py-1 rounded-full text-sm font-medium ${allPass ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+          {allPass ? 'All Pass' : 'Review Required'}
+        </span>
+      </div>
+
+      <div className="grid gap-2">
+        {vetoData.map((veto) => (
+          <div key={veto.id} className={`flex items-center gap-3 p-3 rounded-lg ${
+            veto.status === 'Pass' ? 'bg-green-50 border border-green-200' :
+            veto.status === 'Fail' ? 'bg-red-50 border border-red-200' :
+            'bg-gray-50 border border-gray-200'
+          }`}>
+            <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+              veto.status === 'Pass' ? 'bg-green-500 text-white' :
+              veto.status === 'Fail' ? 'bg-red-500 text-white' :
+              'bg-gray-400 text-white'
+            }`}>
+              {veto.status === 'Pass' ? <Check className="w-4 h-4" /> :
+               veto.status === 'Fail' ? <X className="w-4 h-4" /> :
+               <span className="text-xs">N/A</span>}
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-gray-900">{veto.id}: {veto.name}</span>
+              </div>
+              <p className="text-sm text-gray-600">{veto.evidence}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// Render decision journal from JSON data
+const DecisionJournalSection = ({ journal }) => {
+  if (!journal) return null
+
+  return (
+    <div className="space-y-4">
+      <h3 className="font-bold text-gray-900">Decision Journal Entry</h3>
+
+      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+        <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+          <div>
+            <dt className="text-gray-500">Month</dt>
+            <dd className="font-medium text-gray-900">{journal.month}</dd>
+          </div>
+          <div>
+            <dt className="text-gray-500">Mode</dt>
+            <dd className="font-medium text-gray-900">{journal.mode}</dd>
+          </div>
+          <div>
+            <dt className="text-gray-500">Trades Executed</dt>
+            <dd className="font-medium text-gray-900">{journal.tradesExecuted}</dd>
+          </div>
+          <div>
+            <dt className="text-gray-500">Gold Action</dt>
+            <dd className="font-medium text-gray-900">{journal.goldAction}</dd>
+          </div>
+          <div>
+            <dt className="text-gray-500">Dividend Focus</dt>
+            <dd className="font-medium text-gray-900">{journal.dividendFocus ? 'Yes' : 'No'}</dd>
+          </div>
+          <div>
+            <dt className="text-gray-500">Confidence</dt>
+            <dd className={`font-medium ${journal.confidence === 'High' ? 'text-green-600' : journal.confidence === 'Low' ? 'text-red-600' : 'text-amber-600'}`}>{journal.confidence}</dd>
+          </div>
+        </dl>
+
+        <div className="mt-4 pt-4 border-t border-amber-200">
+          <dt className="text-gray-500 text-sm">1-Sentence Thesis</dt>
+          <dd className="font-medium text-gray-900 mt-1">"{journal.thesis}"</dd>
+        </div>
+
+        {journal.risks && journal.risks.length > 0 && (
+          <div className="mt-4 pt-4 border-t border-amber-200">
+            <dt className="text-gray-500 text-sm mb-2">Risks</dt>
+            <dd>
+              <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
+                {journal.risks.map((risk, idx) => <li key={idx}>{risk}</li>)}
+              </ul>
+            </dd>
+          </div>
+        )}
+
+        <div className="mt-4 pt-4 border-t border-amber-200">
+          <dt className="text-gray-500 text-sm">What Changes My Mind</dt>
+          <dd className="text-sm text-gray-700 mt-1">{journal.whatChanges}</dd>
+        </div>
+
+        {journal.watchNextMonth && journal.watchNextMonth.length > 0 && (
+          <div className="mt-4 pt-4 border-t border-amber-200">
+            <dt className="text-gray-500 text-sm mb-2">Watch Next Month</dt>
+            <dd>
+              <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
+                {journal.watchNextMonth.map((item, idx) => <li key={idx}>{item}</li>)}
+              </ul>
+            </dd>
+          </div>
+        )}
+
+        <div className="mt-4 pt-4 border-t border-amber-200">
+          <dt className="text-gray-500 text-sm">Munger Veto Status</dt>
+          <dd className={`font-medium ${journal.vetoStatus === 'All Pass' ? 'text-green-600' : 'text-red-600'}`}>{journal.vetoStatus}</dd>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export default function InvestmentCommitteeApp() {
@@ -1120,31 +1323,31 @@ Marks & Spencer, MKS"
 
               {activeReportTab === 'holdings' && (
                 <div className="space-y-6">
-                  {/* Holdings Review */}
-                  {analysisResult.holdingsReview && (
+                  {/* Holdings Review - Structured */}
+                  {analysisResult.holdingsReviewData ? (
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                      <HoldingsReviewSection holdingsData={analysisResult.holdingsReviewData} />
+                    </div>
+                  ) : analysisResult.holdingsReview ? (
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
                       <h3 className="font-bold text-gray-900 mb-3">Current Holdings Review</h3>
-                      <div className="prose prose-sm max-w-none">
-                        <pre className="whitespace-pre-wrap text-sm text-gray-700 bg-gray-50 p-4 rounded-lg overflow-auto">
-                          {analysisResult.holdingsReview}
-                        </pre>
-                      </div>
+                      <pre className="whitespace-pre-wrap text-sm text-gray-700 bg-gray-50 p-4 rounded-lg overflow-auto">
+                        {analysisResult.holdingsReview}
+                      </pre>
                     </div>
-                  )}
+                  ) : null}
 
                   {/* Committee Positions */}
                   {analysisResult.committeePositions && (
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
                       <h3 className="font-bold text-gray-900 mb-3">Committee Positions</h3>
-                      <div className="prose prose-sm max-w-none">
-                        <pre className="whitespace-pre-wrap text-sm text-gray-700 bg-gray-50 p-4 rounded-lg overflow-auto">
-                          {analysisResult.committeePositions}
-                        </pre>
-                      </div>
+                      <pre className="whitespace-pre-wrap text-sm text-gray-700 bg-gray-50 p-4 rounded-lg overflow-auto">
+                        {analysisResult.committeePositions}
+                      </pre>
                     </div>
                   )}
 
-                  {!analysisResult.holdingsReview && !analysisResult.committeePositions && (
+                  {!analysisResult.holdingsReviewData && !analysisResult.holdingsReview && !analysisResult.committeePositions && (
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 text-center text-gray-500">
                       <p>No holdings review available.</p>
                       <p className="text-sm mt-2">Check the Full Report for detailed analysis.</p>
@@ -1154,36 +1357,67 @@ Marks & Spencer, MKS"
               )}
 
               {activeReportTab === 'full' && (
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-                  <h3 className="font-bold text-gray-900 mb-3">Full Analysis Report</h3>
-                  <div className="prose prose-sm max-w-none overflow-auto max-h-[600px]">
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
-                      components={{
-                        h1: ({children}) => <h1 className="text-xl font-bold text-gray-900 mt-6 mb-3">{children}</h1>,
-                        h2: ({children}) => <h2 className="text-lg font-bold text-gray-800 mt-5 mb-2 pb-1 border-b border-gray-200">{children}</h2>,
-                        h3: ({children}) => <h3 className="text-base font-semibold text-gray-700 mt-4 mb-2">{children}</h3>,
-                        p: ({children}) => <p className="text-sm text-gray-700 mb-3 leading-relaxed">{children}</p>,
-                        ul: ({children}) => <ul className="list-disc list-inside text-sm text-gray-700 mb-3 space-y-1">{children}</ul>,
-                        ol: ({children}) => <ol className="list-decimal list-inside text-sm text-gray-700 mb-3 space-y-1">{children}</ol>,
-                        li: ({children}) => <li className="text-sm text-gray-700">{children}</li>,
-                        table: ({children}) => <div className="overflow-x-auto mb-4"><table className="min-w-full text-sm border border-gray-200 rounded-lg">{children}</table></div>,
-                        thead: ({children}) => <thead className="bg-gray-100">{children}</thead>,
-                        tbody: ({children}) => <tbody className="divide-y divide-gray-200">{children}</tbody>,
-                        tr: ({children}) => <tr>{children}</tr>,
-                        th: ({children}) => <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-b border-gray-200">{children}</th>,
-                        td: ({children}) => <td className="px-3 py-2 text-sm text-gray-600 border-b border-gray-100">{children}</td>,
-                        strong: ({children}) => <strong className="font-semibold text-gray-900">{children}</strong>,
-                        em: ({children}) => <em className="italic text-gray-600">{children}</em>,
-                        hr: () => <hr className="my-4 border-gray-200" />,
-                        blockquote: ({children}) => <blockquote className="border-l-4 border-amber-400 pl-4 py-2 my-3 bg-amber-50 rounded-r-lg text-sm italic text-gray-700">{children}</blockquote>,
-                        code: ({children}) => <code className="bg-gray-100 px-1.5 py-0.5 rounded text-xs font-mono text-gray-800">{children}</code>,
-                        pre: ({children}) => <pre className="bg-gray-100 p-3 rounded-lg overflow-x-auto text-xs font-mono">{children}</pre>,
-                      }}
-                    >
-                      {fixMarkdownTables(analysisResult.fullAnalysis) || 'No detailed analysis available.'}
-                    </ReactMarkdown>
+                <div className="space-y-6 overflow-auto max-h-[800px]">
+                  {/* Trigger Scan - Structured */}
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                    <h2 className="text-lg font-bold text-gray-800 mb-4 pb-2 border-b border-gray-200">Part A — Trigger Scan + Mode Selection</h2>
+                    <TriggerSection
+                      triggers={analysisResult.triggers}
+                      sentimentScore={analysisResult.sentimentScore}
+                      sentimentAssessment={analysisResult.sentimentAssessment}
+                      mungerInversion={analysisResult.mungerInversion}
+                      mode={analysisResult.mode}
+                    />
                   </div>
+
+                  {/* Holdings Review - Structured */}
+                  {analysisResult.holdingsReviewData && (
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                      <h2 className="text-lg font-bold text-gray-800 mb-4 pb-2 border-b border-gray-200">Part B — Holdings Review</h2>
+                      <HoldingsReviewSection holdingsData={analysisResult.holdingsReviewData} />
+                    </div>
+                  )}
+
+                  {/* Munger Veto - Structured */}
+                  {analysisResult.mungerVetoData && (
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                      <h2 className="text-lg font-bold text-gray-800 mb-4 pb-2 border-b border-gray-200">Part E — Munger Veto Check</h2>
+                      <MungerVetoSection vetoData={analysisResult.mungerVetoData} />
+                    </div>
+                  )}
+
+                  {/* Chair Decision */}
+                  {analysisResult.chairDecision && (
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                      <h2 className="text-lg font-bold text-gray-800 mb-4 pb-2 border-b border-gray-200">Part F — Chair Synthesis</h2>
+                      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                        <p className="text-gray-800">{analysisResult.chairDecision}</p>
+                      </div>
+                      {analysisResult.pillarReminder && (
+                        <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                          <p className="text-sm text-blue-800 italic">{analysisResult.pillarReminder}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Decision Journal - Structured */}
+                  {analysisResult.decisionJournalData && (
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                      <h2 className="text-lg font-bold text-gray-800 mb-4 pb-2 border-b border-gray-200">Part G — Decision Journal Entry</h2>
+                      <DecisionJournalSection journal={analysisResult.decisionJournalData} />
+                    </div>
+                  )}
+
+                  {/* Raw Report Fallback */}
+                  {!analysisResult.triggers && (
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                      <h3 className="font-bold text-gray-900 mb-3">Full Analysis Report</h3>
+                      <pre className="whitespace-pre-wrap text-sm text-gray-700 bg-gray-50 p-4 rounded-lg overflow-auto">
+                        {analysisResult.fullAnalysis || 'No detailed analysis available.'}
+                      </pre>
+                    </div>
+                  )}
                 </div>
               )}
 

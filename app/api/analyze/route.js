@@ -342,6 +342,16 @@ For each potential stock, provide:
 {
   "mode": "Balanced",
   "summary": "This month we deploy £500 into VWRL (£350) and VMID (£150), maintaining our 85/15 Core/Satellite split...",
+  "triggers": [
+    { "id": "L1", "name": "Drawdown >8%", "status": false, "justification": "No existing positions to measure drawdown" },
+    { "id": "L2", "name": "User anxious", "status": false, "justification": "Sentiment 5/10 is neutral territory" },
+    { "id": "L3", "name": "Near-term cash need", "status": false, "justification": "10-year horizon confirmed" },
+    { "id": "A1", "name": "Equities down ≥10%", "status": false, "justification": "Markets near highs" },
+    { "id": "A2", "name": "Portfolio at ATH", "status": false, "justification": "New portfolio starting" }
+  ],
+  "sentimentScore": 7,
+  "sentimentAssessment": "Markets bullish but user sentiment moderate - warrants balanced approach",
+  "mungerInversion": "The biggest risk this month would be chasing momentum at market peaks without adequate margin of safety",
   "trades": [
     {
       "ticker": "VWRL",
@@ -353,21 +363,7 @@ For each potential stock, provide:
       "rationale": [
         "Graham: Global diversification provides margin of safety through broad market exposure",
         "Buffett: Quality via access to world's best companies at 0.22% fee",
-        "Lynch: Understandable - own a piece of the global economy",
-        "Perfect core holding for long-term compounding"
-      ]
-    },
-    {
-      "ticker": "VMID",
-      "name": "Vanguard FTSE 250 UCITS ETF",
-      "amount": "150",
-      "action": "BUY",
-      "category": "SATELLITE",
-      "wrapper": "ISA",
-      "rationale": [
-        "Lynch: Know what you own - domestic UK mid-cap companies",
-        "Marks: UK mid-caps currently offer better value than large caps",
-        "Satellite allocation for growth potential"
+        "Lynch: Understandable - own a piece of the global economy"
       ]
     }
   ],
@@ -377,6 +373,7 @@ For each potential stock, provide:
     "recommendedForExit": 0,
     "holdings": [
       {
+        "name": "Vanguard FTSE All-World",
         "ticker": "VWRL",
         "currentPercent": "60%",
         "category": "CORE",
@@ -388,21 +385,34 @@ For each potential stock, provide:
       }
     ]
   },
+  "mungerVeto": [
+    { "id": "V1", "name": "Cap compliance", "status": "Pass", "evidence": "Within £1200 monthly limit" },
+    { "id": "V2", "name": "Thesis articulation", "status": "Pass", "evidence": "Clear dividend-focused strategy" },
+    { "id": "V3", "name": "Single stock due diligence", "status": "N/A", "evidence": "ETFs only this month" },
+    { "id": "V4", "name": "Inversion check", "status": "Pass", "evidence": "Identified key risk of overpaying" },
+    { "id": "V5", "name": "Circle of competence", "status": "Pass", "evidence": "Broad-based ETFs within understanding" }
+  ],
+  "decisionJournal": {
+    "month": "${formData.month}",
+    "mode": "Balanced",
+    "tradesExecuted": "VWRL £350, VMID £150",
+    "goldAction": "No",
+    "dividendFocus": true,
+    "thesis": "Build core global equity exposure with growth tilt via UK mid-caps",
+    "risks": ["Market timing risk at current valuations", "Currency exposure in global ETF"],
+    "whatChanges": "Significant market correction would trigger more aggressive deployment",
+    "watchNextMonth": ["UK inflation data", "Fed rate decision impact"],
+    "confidence": "Medium",
+    "vetoStatus": "All Pass"
+  },
   "chairDecision": "Deploy full £500 contribution into core global equity exposure, maintaining defensive posture given current market conditions.",
   "pillarReminder": "Graham: 'In the short run, the market is a voting machine but in the long run it is a weighing machine.' Stay disciplined.",
-  "triggerStatus": {
-    "L1": false,
-    "L2": false,
-    "L3": false,
-    "A1": false,
-    "A2": false
-  },
   "totalDeployed": "500",
   "confidence": "Medium"
 }
 \`\`\`
 
-Replace the example values with actual analysis. The JSON must be valid and parseable. Include ALL recommended trades in the trades array. IMPORTANT: The "rationale" field MUST be an array of strings, with each point on a separate line referencing the relevant pillar (Graham, Buffett, Munger, Marks, or Lynch) where applicable.
+Replace ALL example values with your actual analysis. The JSON must be valid and parseable. Include ALL triggers, ALL holdings, ALL veto checks, and ALL recommended trades. IMPORTANT: The "rationale" field MUST be an array of strings referencing relevant pillars (Graham, Buffett, Munger, Marks, or Lynch).
 
 ---
 
@@ -417,12 +427,21 @@ function parseResponse(responseText) {
     mode: jsonData?.mode || extractMode(responseText),
     summary: jsonData?.summary || extractSummary(responseText),
     trades: jsonData?.trades || extractTrades(responseText),
+    // New structured data from JSON
+    triggers: jsonData?.triggers || null,
+    sentimentScore: jsonData?.sentimentScore || null,
+    sentimentAssessment: jsonData?.sentimentAssessment || null,
+    mungerInversion: jsonData?.mungerInversion || null,
+    holdingsReviewData: jsonData?.holdingsReview || null,
+    mungerVetoData: jsonData?.mungerVeto || null,
+    decisionJournalData: jsonData?.decisionJournal || null,
+    // Keep formatted versions for backwards compatibility
     holdingsReview: jsonData?.holdingsReview ? formatHoldingsReview(jsonData.holdingsReview) : (extractSection(responseText, 'PART B', 'PART C') || extractSection(responseText, 'HOLDINGS REVIEW', 'PART C')),
     chairDecision: jsonData?.chairDecision || null,
     pillarReminder: jsonData?.pillarReminder || null,
-    triggerStatus: jsonData?.triggerStatus || null,
     totalDeployed: jsonData?.totalDeployed || null,
     confidence: jsonData?.confidence || null,
+    // Raw text sections as fallback
     triggerScan: extractSection(responseText, 'PART A', 'PART B') || extractSection(responseText, 'TRIGGER SCAN', 'PART B'),
     investigations: extractSection(responseText, 'STOCK INVESTIGATIONS', 'PART D') || extractSection(responseText, 'PART C', 'PART D'),
     committeePositions: extractSection(responseText, 'PART D', 'PART E') || extractSection(responseText, 'THREE COMMITTEE POSITIONS', 'PART E'),
