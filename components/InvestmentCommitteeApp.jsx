@@ -272,6 +272,7 @@ export default function InvestmentCommitteeApp() {
     drawdownTrigger: '8',
     usPermitted: true,
     seekDividends: false,
+    investmentStyle: 'both',  // 'equities' | 'funds' | 'both'
   })
 
   const [holdingsFileName, setHoldingsFileName] = useState('')
@@ -993,6 +994,38 @@ Marks & Spencer, MKS"
                 </label>
               ))}
             </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">Investment Style</label>
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { id: 'equities', icon: TrendingUp, title: 'Equities Only', description: 'Individual stocks (HSBA, DGE, ULVR)', detail: 'More control, higher risk/reward' },
+                  { id: 'funds', icon: PieChart, title: 'Funds Only', description: 'ETFs & funds (VWRL, VHYL, IUKD)', detail: 'Diversified, lower fees' },
+                  { id: 'both', icon: BarChart3, title: 'Both', description: 'Mix of equities and funds', detail: 'Balanced approach (Recommended)' },
+                ].map(({ id, icon: Icon, title, description, detail }) => (
+                  <button
+                    key={id}
+                    onClick={() => setFormData({ ...formData, investmentStyle: id })}
+                    className={`p-4 rounded-xl border-2 text-left transition-all ${
+                      formData.investmentStyle === id
+                        ? 'border-amber-500 bg-amber-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-2 ${
+                      formData.investmentStyle === id ? 'bg-amber-500 text-white' : 'bg-gray-100 text-gray-500'
+                    }`}>
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <p className={`font-medium ${formData.investmentStyle === id ? 'text-amber-700' : 'text-gray-900'}`}>
+                      {title}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">{description}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">{detail}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         )
 
@@ -1046,6 +1079,14 @@ Marks & Spencer, MKS"
                 <div>
                   <span className="text-sm text-gray-500">Time Horizon</span>
                   <p className="font-medium">{formData.timeHorizon} years</p>
+                </div>
+                <div>
+                  <span className="text-sm text-gray-500">Investment Style</span>
+                  <p className="font-medium capitalize">{formData.investmentStyle === 'both' ? 'Equities & Funds' : formData.investmentStyle === 'equities' ? 'Equities Only' : 'Funds Only'}</p>
+                </div>
+                <div>
+                  <span className="text-sm text-gray-500">Dividend Focus</span>
+                  <p className="font-medium">{formData.seekDividends ? 'Yes' : 'No'}</p>
                 </div>
               </div>
             </div>

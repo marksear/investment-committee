@@ -109,6 +109,26 @@ When seeking dividends, recommend a mix of:
 
 ---
 
+## INVESTMENT STYLE CONSTRAINT
+${formData.investmentStyle === 'equities' ?
+  `**IMPORTANT: The user prefers INDIVIDUAL EQUITIES ONLY.**
+- Only recommend individual stocks (e.g., HSBA, DGE, ULVR, LLOY, GSK)
+- Do NOT recommend ETFs or funds (no VWRL, VHYL, IUKD, etc.)
+- For CORE allocation, suggest quality blue-chip stocks instead of index funds
+- For SATELLITE allocation, suggest growth stocks or dividend stocks` :
+  formData.investmentStyle === 'funds' ?
+  `**IMPORTANT: The user prefers FUNDS/ETFs ONLY.**
+- Only recommend ETFs and funds (e.g., VWRL, VHYL, IUKD, VMID, VUSA)
+- Do NOT recommend individual equities/stocks
+- For CORE allocation, suggest broad market ETFs
+- For SATELLITE allocation, suggest thematic or sector ETFs` :
+  `The user accepts BOTH individual equities and funds/ETFs.
+- Recommend the most appropriate mix based on the situation
+- Use ETFs for broad market exposure and diversification
+- Use individual stocks when specific opportunities arise`}
+
+---
+
 # INPUTS FOR THIS MONTH
 
 | Input | Value |
@@ -123,6 +143,7 @@ When seeking dividends, recommend a mix of:
 | User sentiment | ${formData.marketSentiment}/10 |
 | US assets permitted | ${formData.usPermitted ? 'Yes' : 'No'} |
 | Seek dividend income | ${formData.seekDividends ? 'Yes - prioritise quality dividend stocks' : 'No'} |
+| Investment style | ${formData.investmentStyle === 'equities' ? 'Individual equities only' : formData.investmentStyle === 'funds' ? 'Funds/ETFs only' : 'Both equities and funds'} |
 
 **Market Pulse:**
 - UK: ${marketPulse.uk.score}/10 (${marketPulse.uk.label})
