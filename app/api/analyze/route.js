@@ -172,6 +172,13 @@ For each stock above, run the STOCK INVESTIGATION PROTOCOL:
 8. Star Rating (⭐ to ⭐⭐⭐⭐⭐) based on weighted score
 9. Final Verdict with price targets
 
+**CRITICAL:** Investigating a stock does NOT mean recommending it. These stocks must pass ALL the same scrutiny as any other potential investment:
+- Must respect the user's Investment Style preference (${formData.investmentStyle === 'funds' ? 'Funds Only - do NOT recommend individual stocks' : formData.investmentStyle === 'equities' ? 'Equities Only' : 'Both allowed'})
+- Must meet Graham's margin of safety criteria
+- Must pass Munger veto checks
+- Only recommend if they genuinely score well across all Five Pillars (7+/10 overall)
+- If they fail the tests, clearly state why and recommend alternatives instead
+
 ---` : ''}
 
 # REQUIRED OUTPUT
@@ -272,6 +279,14 @@ For each potential stock, provide:
 ---` : ''}
 
 ## PART D — THREE COMMITTEE POSITIONS
+
+**Consider ALL options when building positions:**
+- Investigated stocks (ONLY if they passed scrutiny in Part C with score ≥7/10)
+- Broad market ETFs/funds (if investment style permits: ${formData.investmentStyle})
+- Quality dividend stocks (if dividend focus enabled: ${formData.seekDividends ? 'Yes' : 'No'})
+- Holding cash (if no compelling opportunities exist)
+
+**Do NOT automatically include investigated stocks** — they must earn their place by passing all Five Pillars tests. If an investigated stock fails, recommend a better alternative.
 
 ### AGGRESSIVE POSITION
 **Execution Plan:**
