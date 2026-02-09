@@ -11,6 +11,23 @@ import {
   Rocket, Globe, Newspaper, BarChart2, RefreshCw
 } from 'lucide-react'
 
+// Fix markdown tables that have rows concatenated without newlines
+const fixMarkdownTables = (text) => {
+  if (!text) return text
+
+  // Fix table rows that are joined: "| a | b || c | d |" -> "| a | b |\n| c | d |"
+  let fixed = text.replace(/\|\s*\|\s*(?=[A-Za-z0-9(])/g, '|\n| ')
+
+  // Ensure separator rows are on their own line
+  fixed = fixed.replace(/\|\s*(\|[-:]+)+\|/g, (match) => '\n' + match + '\n')
+
+  // Fix cases where a row ends and another starts: "| text |\n| " patterns are fine
+  // But "| text || next |" needs fixing
+  fixed = fixed.replace(/\|\|/g, '|\n|')
+
+  return fixed
+}
+
 export default function InvestmentCommitteeApp() {
   const [step, setStep] = useState(0)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
@@ -1145,7 +1162,7 @@ Marks & Spencer, MKS"
                         pre: ({children}) => <pre className="bg-gray-100 p-3 rounded-lg overflow-x-auto text-xs font-mono">{children}</pre>,
                       }}
                     >
-                      {analysisResult.fullAnalysis || 'No detailed analysis available.'}
+                      {fixMarkdownTables(analysisResult.fullAnalysis) || 'No detailed analysis available.'}
                     </ReactMarkdown>
                   </div>
                 </div>
