@@ -802,6 +802,10 @@ Marks & Spencer, MKS"
               </div>
             </div>
 
+            <p className="text-xs text-gray-500 -mt-2">
+              <strong>Note:</strong> The contribution amount influences which investments are recommended. Smaller amounts may focus on fewer, higher-conviction picks to minimise trading costs, while larger amounts allow for more diversification.
+            </p>
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Account Wrapper</label>
