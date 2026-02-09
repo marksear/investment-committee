@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import ReactMarkdown from 'react-markdown'
 import {
   Upload, FileText, TrendingUp, Shield, Brain, ChevronRight, ChevronLeft,
   Check, AlertCircle, Loader2, BarChart3, PieChart, BookOpen, Star,
@@ -172,6 +173,7 @@ export default function InvestmentCommitteeApp() {
     'Running Buffett quality checks...',
     'Performing Munger inversion...',
     'Analyzing Marks cycle positioning...',
+    'Applying Lynch classification...',
     'Building committee positions...',
     'Chair synthesis in progress...',
     'Running Munger veto checks...',
@@ -1117,10 +1119,32 @@ Marks & Spencer, MKS"
               {activeReportTab === 'full' && (
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
                   <h3 className="font-bold text-gray-900 mb-3">Full Analysis Report</h3>
-                  <div className="prose prose-sm max-w-none">
-                    <pre className="whitespace-pre-wrap text-sm text-gray-700 bg-gray-50 p-4 rounded-lg overflow-auto max-h-[600px]">
+                  <div className="prose prose-sm max-w-none overflow-auto max-h-[600px]">
+                    <ReactMarkdown
+                      components={{
+                        h1: ({children}) => <h1 className="text-xl font-bold text-gray-900 mt-6 mb-3">{children}</h1>,
+                        h2: ({children}) => <h2 className="text-lg font-bold text-gray-800 mt-5 mb-2 pb-1 border-b border-gray-200">{children}</h2>,
+                        h3: ({children}) => <h3 className="text-base font-semibold text-gray-700 mt-4 mb-2">{children}</h3>,
+                        p: ({children}) => <p className="text-sm text-gray-700 mb-3 leading-relaxed">{children}</p>,
+                        ul: ({children}) => <ul className="list-disc list-inside text-sm text-gray-700 mb-3 space-y-1">{children}</ul>,
+                        ol: ({children}) => <ol className="list-decimal list-inside text-sm text-gray-700 mb-3 space-y-1">{children}</ol>,
+                        li: ({children}) => <li className="text-sm text-gray-700">{children}</li>,
+                        table: ({children}) => <div className="overflow-x-auto mb-4"><table className="min-w-full text-sm border border-gray-200 rounded-lg">{children}</table></div>,
+                        thead: ({children}) => <thead className="bg-gray-100">{children}</thead>,
+                        tbody: ({children}) => <tbody className="divide-y divide-gray-200">{children}</tbody>,
+                        tr: ({children}) => <tr>{children}</tr>,
+                        th: ({children}) => <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 border-b border-gray-200">{children}</th>,
+                        td: ({children}) => <td className="px-3 py-2 text-sm text-gray-600 border-b border-gray-100">{children}</td>,
+                        strong: ({children}) => <strong className="font-semibold text-gray-900">{children}</strong>,
+                        em: ({children}) => <em className="italic text-gray-600">{children}</em>,
+                        hr: () => <hr className="my-4 border-gray-200" />,
+                        blockquote: ({children}) => <blockquote className="border-l-4 border-amber-400 pl-4 py-2 my-3 bg-amber-50 rounded-r-lg text-sm italic text-gray-700">{children}</blockquote>,
+                        code: ({children}) => <code className="bg-gray-100 px-1.5 py-0.5 rounded text-xs font-mono text-gray-800">{children}</code>,
+                        pre: ({children}) => <pre className="bg-gray-100 p-3 rounded-lg overflow-x-auto text-xs font-mono">{children}</pre>,
+                      }}
+                    >
                       {analysisResult.fullAnalysis || 'No detailed analysis available.'}
-                    </pre>
+                    </ReactMarkdown>
                   </div>
                 </div>
               )}
