@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import {
   Upload, FileText, TrendingUp, Shield, Brain, ChevronRight, ChevronLeft,
   Check, AlertCircle, Loader2, BarChart3, PieChart, BookOpen, Star,
@@ -1121,6 +1122,7 @@ Marks & Spencer, MKS"
                   <h3 className="font-bold text-gray-900 mb-3">Full Analysis Report</h3>
                   <div className="prose prose-sm max-w-none overflow-auto max-h-[600px]">
                     <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
                       components={{
                         h1: ({children}) => <h1 className="text-xl font-bold text-gray-900 mt-6 mb-3">{children}</h1>,
                         h2: ({children}) => <h2 className="text-lg font-bold text-gray-800 mt-5 mb-2 pb-1 border-b border-gray-200">{children}</h2>,
