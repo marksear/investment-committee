@@ -15,15 +15,34 @@ import {
 const fixMarkdownTables = (text) => {
   if (!text) return text
 
-  // Fix table rows that are joined: "| a | b || c | d |" -> "| a | b |\n| c | d |"
-  let fixed = text.replace(/\|\s*\|\s*(?=[A-Za-z0-9(])/g, '|\n| ')
+  // Split into lines and process
+  const lines = text.split('\n')
+  const fixedLines = []
 
-  // Ensure separator rows are on their own line
-  fixed = fixed.replace(/\|\s*(\|[-:]+)+\|/g, (match) => '\n' + match + '\n')
+  for (const line of lines) {
+    // Check if this line contains multiple table rows (has || pattern or multiple | ... | patterns)
+    if (line.includes('|') && (line.match(/\|/g) || []).length > 6) {
+      // This might be multiple table rows concatenated
+      // Split on pattern where a cell ends and new row starts: "| text | | Next"
+      const parts = line.split(/\|\s*\|(?=\s*[A-Za-z0-9(L\-])/)
+      if (parts.length > 1) {
+        parts.forEach((part, i) => {
+          let row = part.trim()
+          if (!row.startsWith('|')) row = '| ' + row
+          if (!row.endsWith('|')) row = row + ' |'
+          fixedLines.push(row)
+        })
+        continue
+      }
+    }
+    fixedLines.push(line)
+  }
 
-  // Fix cases where a row ends and another starts: "| text |\n| " patterns are fine
-  // But "| text || next |" needs fixing
-  fixed = fixed.replace(/\|\|/g, '|\n|')
+  let fixed = fixedLines.join('\n')
+
+  // Also ensure separator rows (|---|---|) have newlines around them
+  fixed = fixed.replace(/([^\n])\s*(\|[\s-:]+\|[\s-:|]+)/g, '$1\n$2')
+  fixed = fixed.replace(/(\|[\s-:]+\|[\s-:|]+)\s*([^\n])/g, '$1\n$2')
 
   return fixed
 }
