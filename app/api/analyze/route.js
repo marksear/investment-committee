@@ -129,6 +129,27 @@ ${formData.investmentStyle === 'equities' ?
 
 ---
 
+## STOCK FOCUS CONSTRAINT
+${formData.stockFocus === 'defensive' ?
+  `**DEFENSIVE FOCUS: Prioritise defensive sectors.**
+- Favour: Utilities, consumer staples, healthcare, telecoms
+- These offer stability and lower volatility
+- Avoid or underweight cyclicals like financials, industrials, and consumer discretionary
+- Appropriate for uncertain markets or risk-averse investors` :
+  formData.stockFocus === 'cyclical' ?
+  `**CYCLICAL FOCUS: Prioritise cyclical sectors.**
+- Favour: Financials, industrials, consumer discretionary, materials
+- These offer higher growth potential in expanding economies
+- Accept higher volatility for greater upside
+- Appropriate for confident markets or growth-seeking investors` :
+  `**BALANCED FOCUS: Consider both defensive and cyclical stocks.**
+- Adapt sector mix based on current market conditions
+- In fearful markets (sentiment <4), lean defensive
+- In greedy markets (sentiment >6), cyclicals may offer opportunity
+- Select the best opportunities regardless of sector classification`}
+
+---
+
 # INPUTS FOR THIS MONTH
 
 | Input | Value |
@@ -144,6 +165,7 @@ ${formData.investmentStyle === 'equities' ?
 | US assets permitted | ${formData.usPermitted ? 'Yes' : 'No'} |
 | Seek dividend income | ${formData.seekDividends ? 'Yes - prioritise quality dividend stocks' : 'No'} |
 | Investment style | ${formData.investmentStyle === 'equities' ? 'Individual equities only' : formData.investmentStyle === 'funds' ? 'Funds/ETFs only' : 'Both equities and funds'} |
+| Stock focus | ${formData.stockFocus === 'defensive' ? 'Defensive (utilities, staples, healthcare)' : formData.stockFocus === 'cyclical' ? 'Cyclical (financials, industrials, discretionary)' : 'Balanced'} |
 
 **Market Pulse:**
 - UK: ${marketPulse.uk.score}/10 (${marketPulse.uk.label})
@@ -174,6 +196,7 @@ For each stock above, run the STOCK INVESTIGATION PROTOCOL:
 
 **CRITICAL:** Investigating a stock does NOT mean recommending it. These stocks must pass ALL the same scrutiny as any other potential investment:
 - Must respect the user's Investment Style preference (${formData.investmentStyle === 'funds' ? 'Funds Only - do NOT recommend individual stocks' : formData.investmentStyle === 'equities' ? 'Equities Only' : 'Both allowed'})
+- Must respect the user's Stock Focus preference (${formData.stockFocus === 'defensive' ? 'Defensive - favour utilities, staples, healthcare' : formData.stockFocus === 'cyclical' ? 'Cyclical - favour financials, industrials, discretionary' : 'Balanced'})
 - Must meet Graham's margin of safety criteria
 - Must pass Munger veto checks
 - Only recommend if they genuinely score well across all Five Pillars (7+/10 overall)

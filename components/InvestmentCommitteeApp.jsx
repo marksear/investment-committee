@@ -273,6 +273,7 @@ export default function InvestmentCommitteeApp() {
     usPermitted: true,
     seekDividends: false,
     investmentStyle: 'both',  // 'equities' | 'funds' | 'both'
+    stockFocus: 'balanced',  // 'defensive' | 'balanced' | 'cyclical'
   })
 
   const [holdingsFileName, setHoldingsFileName] = useState('')
@@ -1030,6 +1031,38 @@ Marks & Spencer, MKS"
                 ))}
               </div>
             </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">Stock Focus</label>
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { id: 'defensive', icon: Shield, title: 'Defensive Focus', description: 'Utilities, healthcare, staples', detail: 'Stable, less volatile' },
+                  { id: 'balanced', icon: Scale, title: 'Balanced', description: 'Mix based on conditions', detail: 'Adapt to market (Recommended)' },
+                  { id: 'cyclical', icon: Zap, title: 'Cyclical Focus', description: 'Financials, industrials, discretionary', detail: 'Higher growth potential' },
+                ].map(({ id, icon: Icon, title, description, detail }) => (
+                  <button
+                    key={id}
+                    onClick={() => setFormData({ ...formData, stockFocus: id })}
+                    className={`p-4 rounded-xl border-2 text-left transition-all ${
+                      formData.stockFocus === id
+                        ? 'border-amber-500 bg-amber-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-2 ${
+                      formData.stockFocus === id ? 'bg-amber-500 text-white' : 'bg-gray-100 text-gray-500'
+                    }`}>
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <p className={`font-medium ${formData.stockFocus === id ? 'text-amber-700' : 'text-gray-900'}`}>
+                      {title}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">{description}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">{detail}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         )
 
@@ -1091,6 +1124,10 @@ Marks & Spencer, MKS"
                 <div>
                   <span className="text-sm text-gray-500">Dividend Focus</span>
                   <p className="font-medium">{formData.seekDividends ? 'Yes' : 'No'}</p>
+                </div>
+                <div>
+                  <span className="text-sm text-gray-500">Stock Focus</span>
+                  <p className="font-medium capitalize">{formData.stockFocus === 'balanced' ? 'Balanced' : formData.stockFocus === 'defensive' ? 'Defensive' : 'Cyclical'}</p>
                 </div>
               </div>
             </div>
