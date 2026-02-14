@@ -1205,12 +1205,12 @@ Marks & Spencer, MKS"
           return (
             <div className="space-y-6">
               {/* Report Header */}
-              <div className="bg-gradient-to-r from-amber-900 to-orange-800 rounded-2xl p-6 text-white">
+              <div className="bg-gradient-to-r from-slate-800 to-slate-700 rounded-2xl p-6 text-white">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="text-amber-200 text-sm">The Investment Program Report</p>
+                    <p className="text-slate-300 text-sm">The Investment Program Report</p>
                     <h1 className="text-2xl font-bold mt-1">{formData.month}</h1>
-                    <p className="text-amber-300 mt-2">
+                    <p className="text-slate-400 mt-2">
                       {formData.wrapper} • £{formData.contribution}/month • {analysisResult.mode || 'Balanced'} Mode
                     </p>
                   </div>
@@ -1218,25 +1218,25 @@ Marks & Spencer, MKS"
 
                 <div className="grid grid-cols-3 gap-4 mt-6">
                   <div className="bg-white/10 rounded-lg p-3 flex flex-col items-center justify-center">
-                    <p className="text-amber-200 text-xs text-center">Committee Stance</p>
+                    <p className="text-slate-300 text-xs text-center">Committee Stance</p>
                     <p className={`text-lg font-bold text-center ${
                       analysisResult.mode === 'AGGRESSIVE' ? 'text-green-400' :
-                      analysisResult.mode === 'LOW_RISK' ? 'text-amber-400' :
-                      'text-amber-300'
+                      analysisResult.mode === 'LOW_RISK' ? 'text-yellow-400' :
+                      'text-slate-200'
                     }`}>{analysisResult.mode || 'Balanced'}</p>
                   </div>
                   <div className="bg-white/10 rounded-lg p-3 flex flex-col items-center justify-center">
-                    <p className="text-amber-200 text-xs text-center">Trades Recommended</p>
+                    <p className="text-slate-300 text-xs text-center">Trades Recommended</p>
                     <p className="text-lg font-bold text-center">{analysisResult.trades?.length || 0}</p>
                   </div>
                   <div className="bg-white/10 rounded-lg p-3 flex flex-col items-center justify-center">
-                    <p className="text-amber-200 text-xs text-center">Market Regime</p>
+                    <p className="text-slate-300 text-xs text-center">Market Regime</p>
                     <p className={`text-lg font-bold text-center ${
                       marketPulseData?.uk?.regime === 'Trending Up' ? 'text-green-400' :
                       marketPulseData?.uk?.regime === 'Trending Down' ? 'text-red-400' :
                       marketPulseData?.uk?.regime === 'Volatile' ? 'text-orange-400' :
-                      marketPulseData?.uk?.regime === 'Choppy' ? 'text-amber-400' :
-                      'text-amber-300'
+                      marketPulseData?.uk?.regime === 'Choppy' ? 'text-yellow-400' :
+                      'text-slate-200'
                     }`}>{marketPulseData?.uk?.regime || 'Analyzing...'}</p>
                   </div>
                 </div>
