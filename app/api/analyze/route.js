@@ -150,6 +150,27 @@ ${formData.stockFocus === 'defensive' ?
 
 ---
 
+## HOLDINGS REVIEW CONSISTENCY DOCTRINE
+
+When reviewing existing holdings, apply these principles strictly:
+
+1. **Evaluate on fundamental merit, not preference alignment.** Preferences (dividend focus, stock focus, investment style) guide NEW purchases. They do NOT retroactively disqualify existing holdings. A holding bought under different preferences is not broken — it was appropriate when purchased and may still be fundamentally sound.
+
+2. **Preference mismatch is a NOTE, not a SELL trigger.** If a holding no longer matches current preferences (e.g. a dividend ETF when dividends are unticked, or a cyclical stock when defensive focus is selected), mention this as context in the rationale — NOT as a red flag or sell reason. Portfolios should not churn with monthly preference changes.
+
+3. **Only recommend SELL for genuine fundamental concerns:**
+   - Investment thesis is broken (moat eroded, business model impaired)
+   - Extreme overvaluation with no margin of safety remaining
+   - Business deterioration (declining revenue, collapsing margins, governance failure)
+   - Permanent capital impairment risk identified through Munger inversion
+   - Position has grown far beyond its appropriate allocation weight
+
+4. **The Buffett test for existing holdings:** "Would I be happy buying this at today's price?" If yes, do not recommend selling. If "not at this exact price but still quality" → HOLD, not SELL.
+
+5. **Cost awareness:** Every sell has transaction costs and potential tax consequences. The bar for selling must be higher than the bar for not buying in the first place.
+
+---
+
 # INPUTS FOR THIS MONTH
 
 | Input | Value |
@@ -231,7 +252,8 @@ For each holding, provide:
 - Lynch Label: [Stalwart/Fast Grower/Cyclic/etc.]
 - Doctrine Fit: Strong / Moderate / Weak
 - Still Meets Mandate: Yes / No
-- Red Flags: [List any concerns or "None"]
+- Red Flags: For each concern, provide a short title AND a 1-2 sentence explanation of why it matters and what the risk is. Only flag genuine fundamental concerns — NOT preference mismatches. If no concerns, state "None".
+- Rationale: 2-3 sentences explaining WHY you recommend this action. Reference the Five Pillars where relevant. If a holding doesn't match current preferences but is still fundamentally sound, explain this.
 - Action: HOLD / SELL / ADD
 
 [Repeat for each holding...]
@@ -439,7 +461,13 @@ For each potential stock, provide:
         "lynchLabel": "Index",
         "doctrineFit": "Strong",
         "meetsMandate": true,
-        "redFlags": [],
+        "redFlags": [
+          {
+            "flag": "Single-country banking exposure",
+            "detail": "Over 80% of revenue from UK domestic banking, highly sensitive to UK economic downturns and regulatory shifts."
+          }
+        ],
+        "rationale": "Strong global diversification at 0.22% OCF. Buffett quality: access to world's best businesses. Graham margin of safety through broad diversification. No thesis-breaking concerns.",
         "action": "HOLD"
       }
     ]
@@ -471,7 +499,7 @@ For each potential stock, provide:
 }
 \`\`\`
 
-Replace ALL example values with your actual analysis. The JSON must be valid and parseable. Include ALL triggers, ALL holdings, ALL veto checks, and ALL recommended trades. IMPORTANT: The "rationale" field MUST be an array of strings referencing relevant pillars (Graham, Buffett, Munger, Marks, or Lynch).
+Replace ALL example values with your actual analysis. The JSON must be valid and parseable. Include ALL triggers, ALL holdings, ALL veto checks, and ALL recommended trades. IMPORTANT: The trade "rationale" field MUST be an array of strings referencing relevant pillars (Graham, Buffett, Munger, Marks, or Lynch). The holdings review "rationale" field is a string explaining the action recommendation. The holdings review "redFlags" field is an array of objects, each with "flag" (short title) and "detail" (1-2 sentence explanation). Only flag genuine fundamental concerns as red flags — preference mismatches are NOT red flags.
 
 ---
 
@@ -544,6 +572,16 @@ function formatHoldingsReview(holdingsData) {
     text += `|---------|---|----------|-------------|--------------|--------|\n`
     for (const h of holdingsData.holdings) {
       text += `| ${h.ticker} | ${h.currentPercent} | ${h.category} | ${h.lynchLabel} | ${h.doctrineFit} | ${h.action} |\n`
+    }
+    text += `\n`
+    for (const h of holdingsData.holdings) {
+      if (h.redFlags && h.redFlags.length > 0) {
+        const flags = h.redFlags.map(rf => typeof rf === 'string' ? rf : rf.flag).join(', ')
+        text += `⚠ ${h.ticker}: ${flags}\n`
+      }
+      if (h.rationale) {
+        text += `💡 ${h.ticker}: ${h.rationale}\n`
+      }
     }
   }
 

@@ -118,8 +118,33 @@ const HoldingsReviewSection = ({ holdingsData }) => {
               </div>
             </div>
             {holding.redFlags && holding.redFlags.length > 0 && (
-              <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-700">
-                <strong>Red Flags:</strong> {holding.redFlags.join(', ')}
+              <div className="mt-3 space-y-2">
+                {holding.redFlags.map((rf, rfIdx) => (
+                  <div key={rfIdx} className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <div className="flex items-start gap-2">
+                      <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium text-red-800">
+                          {typeof rf === 'string' ? rf : rf.flag}
+                        </p>
+                        {typeof rf === 'object' && rf.detail && (
+                          <p className="text-xs text-red-600 mt-1">{rf.detail}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {holding.rationale && (
+              <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <Lightbulb className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-blue-800">Rationale</p>
+                    <p className="text-xs text-blue-700 mt-1">{holding.rationale}</p>
+                  </div>
+                </div>
               </div>
             )}
           </div>
