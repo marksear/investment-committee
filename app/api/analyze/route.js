@@ -254,6 +254,7 @@ For each holding, provide:
 - Still Meets Mandate: Yes / No
 - Red Flags: For each concern, provide a short title AND a 1-2 sentence explanation of why it matters and what the risk is. Only flag genuine fundamental concerns — NOT preference mismatches. If no concerns, state "None".
 - Rationale: 2-3 sentences explaining WHY you recommend this action. Reference the Five Pillars where relevant. If a holding doesn't match current preferences but is still fundamentally sound, explain this.
+- Consider: (Only for HOLD with Moderate/Weak fit or when red flags exist) 1-2 concrete alternatives the investor could consider. Be specific with ticker symbols. E.g. "Swap for [X] which offers better [Y]" or "Reduce position and reallocate to [Z]". Omit this field entirely if action is ADD, SELL, or HOLD with Strong fit and no red flags.
 - Action: HOLD / SELL / ADD
 
 [Repeat for each holding...]
@@ -468,6 +469,10 @@ For each potential stock, provide:
           }
         ],
         "rationale": "Strong global diversification at 0.22% OCF. Buffett quality: access to world's best businesses. Graham margin of safety through broad diversification. No thesis-breaking concerns.",
+        "consider": [
+          "Swap for iShares Core MSCI World (SWDA) for lower OCF at similar global exposure",
+          "Reduce to 40% and add VMID for UK mid-cap growth tilt"
+        ],
         "action": "HOLD"
       }
     ]
@@ -499,7 +504,7 @@ For each potential stock, provide:
 }
 \`\`\`
 
-Replace ALL example values with your actual analysis. The JSON must be valid and parseable. Include ALL triggers, ALL holdings, ALL veto checks, and ALL recommended trades. IMPORTANT: The trade "rationale" field MUST be an array of strings referencing relevant pillars (Graham, Buffett, Munger, Marks, or Lynch). The holdings review "rationale" field is a string explaining the action recommendation. The holdings review "redFlags" field is an array of objects, each with "flag" (short title) and "detail" (1-2 sentence explanation). Only flag genuine fundamental concerns as red flags — preference mismatches are NOT red flags.
+Replace ALL example values with your actual analysis. The JSON must be valid and parseable. Include ALL triggers, ALL holdings, ALL veto checks, and ALL recommended trades. IMPORTANT: The trade "rationale" field MUST be an array of strings referencing relevant pillars (Graham, Buffett, Munger, Marks, or Lynch). The holdings review "rationale" field is a string explaining the action recommendation. The holdings review "redFlags" field is an array of objects, each with "flag" (short title) and "detail" (1-2 sentence explanation). Only flag genuine fundamental concerns as red flags — preference mismatches are NOT red flags. The holdings review "consider" field is an array of 1-2 specific alternative suggestions (with tickers) — only include when action is HOLD and doctrineFit is Moderate or Weak, or when red flags exist. Omit the field entirely for Strong-fit holds with no flags.
 
 ---
 
@@ -581,6 +586,9 @@ function formatHoldingsReview(holdingsData) {
       }
       if (h.rationale) {
         text += `💡 ${h.ticker}: ${h.rationale}\n`
+      }
+      if (h.consider && h.consider.length > 0) {
+        text += `👁 ${h.ticker}: Consider — ${h.consider.join('; ')}\n`
       }
     }
   }
